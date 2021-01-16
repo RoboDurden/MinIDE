@@ -5,7 +5,7 @@
 ## usage:
 
 - Simply copy the MinIDE folder into your project
-- define the root folder in MinIDE/ajax.php :
+- define the root folder in MinIDE/MinIDE.php :
 ```
 <?php
 
