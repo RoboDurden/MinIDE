@@ -1,4 +1,36 @@
 
+
+function File(sPath,sValue)
+{
+    this.m_sPath = sPath;
+    this.m_sValue = sValue;
+
+    this.GetFormat = function()
+    {with(this){
+        var aM = m_sPath.match(/\.([^.]+)$/);
+        if (aM)
+        {
+            let sExt = aM[1].toLowerCase();
+            var h = {"js":"text/javascript", "c":"text/x-csrc", "h":"text/x-csrc", "css":"text/css", "htm":"text/html", "html":"text/html", "php":"text/x-php"};
+            if (h[sExt])
+                return h[sExt];
+        }
+        return "text/plain";
+    }}
+
+    this.GetHtmlTab = function(bActive)
+    {with(this){
+        let i = m_sPath.indexOf("../");
+        let s = i < 0 ? m_sPath : m_sPath.substring(i+3);
+        let sClass = bActive ? "MinIdeTab1" : "MinIdeTab0";
+        return '<span class="'+sClass+'"><a class="'+sClass+'" href="javascript:CallIDE(2,\''+m_sPath+'\');">'+s+'</a> <a class="'+sClass+'" style="color:#ff0000" href="javascript:CallIDE(3,\''+m_sPath+'\');">x</a></span>';
+        return '<input type="button" class="'+sClass+'" value="'+s+'" />';
+    }}
+    
+}
+
+
+
 var g_IdMinIDE = 1;
 function MinIDE(rContainer)
 {
@@ -9,12 +41,16 @@ function MinIDE(rContainer)
 
     this.m_sMess = "";
 
+    this.m_hFile = {};
+    this.m_oFile = null;
+
+    this.m_aTabStack = [];
 
     this.GetHtml = function()
     {with(this){
         var s = '<div id="server" class="MinIDEServer" style="display:none;" onClick="this.style.display=\'none\'">server mess</div>';
         s += '<table class="MinIDE" border=0><tr><td class="MinIDE_TopLeft" id="MinIDE_TopLeft'+m_oId+'"></td><td id="MinIDE_TopRight'+m_oId+'"></td></tr>';
-        s += '<tr><td class="MinIDE_BottomLeft" id="MinIDE_BottomLeft'+m_oId+'"></td><td class="MinIDE_BottomRight" id="MinIDE_BottomRight'+m_oId+'"><textarea class="MinIDE_Editor" id="MinIDE_Editor'+m_oId+'"><script>\nvar sTest  = prompt("enter a string");\n</script></textarea></td></tr></table>';
+        s += '<tr><td class="MinIDE_BottomLeft" id="MinIDE_BottomLeft'+m_oId+'"></td><td class="MinIDE_BottomRight"style="visibility:hidden;" id="MinIDE_BottomRight'+m_oId+'"><textarea class="MinIDE_Editor" id="MinIDE_Editor'+m_oId+'"></textarea></td></tr></table>';
         //alert(s);
         return s;
     }}
@@ -24,9 +60,80 @@ function MinIDE(rContainer)
         return this.m_oEditor.getValue()   
     }
 
-    this.CallIDE = function(s)
+    this._SetTabs = function()
     {with(this){
-        SubmitAjax(2,s);
+
+        var s = "";
+
+        Object.values(m_hFile).forEach(oFile => 
+        {
+            s += oFile.GetHtmlTab(oFile == m_oFile);
+        });
+        let r = document.getElementById("MinIDE_TopRight"+m_oId);
+        r.innerHTML = s;
+
+    }}
+
+    this._OpenFile = function(oFile)
+    {with(this){
+        if (m_oFile)
+            m_oFile.m_sValue = m_oEditor.getValue();
+
+        let r = document.getElementById("MinIDE_BottomRight"+m_oId);
+        if (oFile)
+        {
+            m_oFile = m_hFile[oFile.m_sPath] = oFile;
+            m_oEditor.setOption("mode", m_oFile.GetFormat());
+            m_oEditor.setValue(m_oFile.m_sValue);
+            r.style.visibility = "";
+
+            m_aTabStack.push(m_oFile.m_sPath);
+        }
+        else
+        {
+            r.style.visibility = "hidden";
+        }
+        _SetTabs();
+    }}
+
+    this.CallIDE = function(iAction,s)
+    {with(this){
+
+        switch(iAction)
+        {
+        case 2:
+            if (m_hFile[s])
+            {
+                if (m_oFile == m_hFile[s])
+                    return;
+
+                _OpenFile(m_hFile[s]);
+                return;
+            }
+            break;
+        case 3:
+            if (m_hFile[s])
+            {
+                let bOpen = m_oFile == m_hFile[s];
+                delete m_hFile[s];
+                if (bOpen)
+                {
+                    let sPrev = false;
+                    while (m_aTabStack.length > 0)
+                    {
+                        sPrev = m_aTabStack.pop();
+                        if (m_hFile[sPrev])
+                            break;
+                    }
+                    _OpenFile(m_hFile[sPrev]);
+                }
+                else 
+                    _SetTabs();
+
+            }
+            return;
+        }
+        SubmitAjax(iAction,s);
     }}
     
 
@@ -51,7 +158,10 @@ function MinIDE(rContainer)
     
         if (sConfirm)
             if (!confirm(sConfirm)) return 0;
-    
+
+        
+
+
         //if (m_bSubmited)	return 0;
     
         var oData = new FormData(); // m_rForm
@@ -100,24 +210,7 @@ function MinIDE(rContainer)
                     init_php_file_tree();
                     break;
                 case 2:
-                    //alert(sJS);
-                    var re = /\.([^.]+)$/;
-                    var aM = sJson.match(re);
-                    if (aM)
-                    {
-                        let sExt = aM[1].toLowerCase();
-
-                        var h = {"js":"text/javascript", "c":"text/x-csrc", "h":"text/x-csrc", "css":"text/css", "htm":"text/html", "html":"text/html", "php":"text/x-php"};
-                        if (h[sExt])
-                        {
-                            //alert(sExt + " = '" + h[sExt] + "'");
-                            m_oEditor.setOption("mode", h[sExt]);
-                        }
-                        else
-                            m_oEditor.setOption("mode", "text/plain");
-                    }
-
-                    m_oEditor.setValue(sJS);
+                    _OpenFile(new File(sJson,sJS));
                     break;
                 default:
                     //ServerMess("update: "+ sJS.length);

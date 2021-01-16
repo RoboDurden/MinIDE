@@ -9,6 +9,11 @@ td.MinIDE_TopLeft
     width:10%;
 }
 
+td.MinIDE_TopRight
+{
+}
+
+
 
 td.MinIDE_BottomLeft
 {
@@ -39,4 +44,33 @@ div.MinIDEServer
     background-color: #ffee00;
     color:#00ff00;
     font-size:24pt;
+}
+
+a.MinIdeTab0
+{
+    color:#333333;
+    text-decoration: none;
+}
+a.MinIdeTab1
+{
+    color:#555555;
+    text-decoration: none;
+}
+
+span.MinIdeTab0
+{
+    padding-left: 5pt;;
+    padding-right: 5pt;;
+    border: inset 2px #666666;
+    border-radius: 4pt;
+    background-color: #eeeeee
+}
+span.MinIdeTab1
+{
+    padding-left: 5pt;;
+    padding-right: 5pt;;
+    border: outset 2px #666666;
+    border-radius: 4pt;
+    background-color: #ffffff;
+    border-bottom: none;
 }

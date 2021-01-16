@@ -31,7 +31,7 @@ function Action($iAction,$sJson)
     {
         case 1: // load tree
             require("phpFileTree/php_file_tree.php");
-            echo php_file_tree("mode/..", "javascript:CallIDE('[link]');");
+            echo php_file_tree("mode/..", "javascript:CallIDE(2,'[link]');");
         return;
     case 2: // load tree
         if (Load($sJson,$s))

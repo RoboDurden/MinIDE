@@ -1,4 +1,4 @@
-hello world :-) 2021-01-16 17:22:34
+hello world :-) 2021-01-16 22:07:24
 _SERVER: MIBDIRS => C:/xampp/php/extras/mibs<br>
 _SERVER: MYSQL_HOME => \xampp\mysql\bin<br>
 _SERVER: OPENSSL_CONF => C:/xampp/apache/bin/openssl.cnf<br>
@@ -7,13 +7,13 @@ _SERVER: PHPRC => \xampp\php<br>
 _SERVER: TMP => \xampp\tmp<br>
 _SERVER: HTTP_HOST => localhost<br>
 _SERVER: HTTP_CONNECTION => keep-alive<br>
-_SERVER: CONTENT_LENGTH => 238<br>
+_SERVER: CONTENT_LENGTH => 245<br>
 _SERVER: HTTP_PRAGMA => no-cache<br>
 _SERVER: HTTP_CACHE_CONTROL => no-cache<br>
 _SERVER: HTTP_SEC_CH_UA => "Google Chrome";v="87", " Not;A Brand";v="99", "Chromium";v="87"<br>
 _SERVER: HTTP_SEC_CH_UA_MOBILE => ?0<br>
 _SERVER: HTTP_USER_AGENT => Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36<br>
-_SERVER: CONTENT_TYPE => multipart/form-data; boundary=----WebKitFormBoundaryJplXZzlkE4ADSbu8<br>
+_SERVER: CONTENT_TYPE => multipart/form-data; boundary=----WebKitFormBoundaryA1aQrhAeH4W8xZZn<br>
 _SERVER: HTTP_ACCEPT => */*<br>
 _SERVER: HTTP_ORIGIN => http://localhost<br>
 _SERVER: HTTP_SEC_FETCH_SITE => same-origin<br>
@@ -40,7 +40,7 @@ _SERVER: CONTEXT_PREFIX => <br>
 _SERVER: CONTEXT_DOCUMENT_ROOT => C:/xampp/htdocs<br>
 _SERVER: SERVER_ADMIN => postmaster@localhost<br>
 _SERVER: SCRIPT_FILENAME => C:/xampp/htdocs/MinIDE/MinIDE/ajax.php<br>
-_SERVER: REMOTE_PORT => 54644<br>
+_SERVER: REMOTE_PORT => 54689<br>
 _SERVER: GATEWAY_INTERFACE => CGI/1.1<br>
 _SERVER: SERVER_PROTOCOL => HTTP/1.1<br>
 _SERVER: REQUEST_METHOD => POST<br>
@@ -48,10 +48,11 @@ _SERVER: QUERY_STRING => <br>
 _SERVER: REQUEST_URI => /MinIDE/MinIDE/ajax.php<br>
 _SERVER: SCRIPT_NAME => /MinIDE/MinIDE/ajax.php<br>
 _SERVER: PHP_SELF => /MinIDE/MinIDE/ajax.php<br>
-_SERVER: REQUEST_TIME_FLOAT => 1610814154.82<br>
-_SERVER: REQUEST_TIME => 1610814154<br>
+_SERVER: REQUEST_TIME_FLOAT => 1610831244.95<br>
+_SERVER: REQUEST_TIME => 1610831244<br>
 online : 
-iAction = 1)
-json length: 9
-Action(1)
-close log: 2021-01-16 17:22:34	duration [s]: 0.035741806030273
+iAction = 2)
+json length: 16
+Action(2)
+load file 'mode/../ajax.php'
+close log: 2021-01-16 22:07:24	duration [s]: 0.00063991546630859
