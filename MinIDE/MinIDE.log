@@ -1,0 +1,62 @@
+hello world :-) 2021-01-17 00:44:46
+_SERVER: MIBDIRS => C:/xampp/php/extras/mibs<br>
+_SERVER: MYSQL_HOME => \xampp\mysql\bin<br>
+_SERVER: OPENSSL_CONF => C:/xampp/apache/bin/openssl.cnf<br>
+_SERVER: PHP_PEAR_SYSCONF_DIR => \xampp\php<br>
+_SERVER: PHPRC => \xampp\php<br>
+_SERVER: TMP => \xampp\tmp<br>
+_SERVER: HTTP_HOST => localhost<br>
+_SERVER: HTTP_CONNECTION => keep-alive<br>
+_SERVER: CONTENT_LENGTH => 238<br>
+_SERVER: HTTP_PRAGMA => no-cache<br>
+_SERVER: HTTP_CACHE_CONTROL => no-cache<br>
+_SERVER: HTTP_SEC_CH_UA => "Google Chrome";v="87", " Not;A Brand";v="99", "Chromium";v="87"<br>
+_SERVER: HTTP_SEC_CH_UA_MOBILE => ?0<br>
+_SERVER: HTTP_USER_AGENT => Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36<br>
+_SERVER: CONTENT_TYPE => multipart/form-data; boundary=----WebKitFormBoundaryApYRT1vdopTOkPe6<br>
+_SERVER: HTTP_ACCEPT => */*<br>
+_SERVER: HTTP_ORIGIN => http://localhost<br>
+_SERVER: HTTP_SEC_FETCH_SITE => same-origin<br>
+_SERVER: HTTP_SEC_FETCH_MODE => cors<br>
+_SERVER: HTTP_SEC_FETCH_DEST => empty<br>
+_SERVER: HTTP_REFERER => http://localhost/MinIDE/test.htm<br>
+_SERVER: HTTP_ACCEPT_ENCODING => gzip, deflate, br<br>
+_SERVER: HTTP_ACCEPT_LANGUAGE => de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7<br>
+_SERVER: PATH => C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Program Files (x86)\Intel\iCLS Client\;C:\Program Files\Intel\iCLS Client\;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files\Intel\WiFi\bin\;C:\Program Files\Common Files\Intel\WirelessCommon\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Microsoft VS Code\bin;C:\Program Files\PuTTY\;C:\Program Files (x86)\STMicroelectronics\STM32 ST-LINK Utility\ST-LINK Utility;C:\Program Files\Java\jre1.8.0_251\bin;C:\Users\user\AppData\Local\Microsoft\WindowsApps;C:\Users\user\AppData\Local\GitHubDesktop\bin;C:\Program Files\Java\jre1.8.0_251\bin;;%USERPROFILE%\AppData\Local\Microsoft\WindowsApps<br>
+_SERVER: SystemRoot => C:\WINDOWS<br>
+_SERVER: COMSPEC => C:\WINDOWS\system32\cmd.exe<br>
+_SERVER: PATHEXT => .COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC<br>
+_SERVER: WINDIR => C:\WINDOWS<br>
+_SERVER: SERVER_SIGNATURE => <address>Apache/2.4.41 (Win64) OpenSSL/1.1.1c PHP/7.4.1 Server at localhost Port 80</address>
+<br>
+_SERVER: SERVER_SOFTWARE => Apache/2.4.41 (Win64) OpenSSL/1.1.1c PHP/7.4.1<br>
+_SERVER: SERVER_NAME => localhost<br>
+_SERVER: SERVER_ADDR => ::1<br>
+_SERVER: SERVER_PORT => 80<br>
+_SERVER: REMOTE_ADDR => ::1<br>
+_SERVER: DOCUMENT_ROOT => C:/xampp/htdocs<br>
+_SERVER: REQUEST_SCHEME => http<br>
+_SERVER: CONTEXT_PREFIX => <br>
+_SERVER: CONTEXT_DOCUMENT_ROOT => C:/xampp/htdocs<br>
+_SERVER: SERVER_ADMIN => postmaster@localhost<br>
+_SERVER: SCRIPT_FILENAME => C:/xampp/htdocs/MinIDE/MinIDE/MinIDE.php<br>
+_SERVER: REMOTE_PORT => 61215<br>
+_SERVER: GATEWAY_INTERFACE => CGI/1.1<br>
+_SERVER: SERVER_PROTOCOL => HTTP/1.1<br>
+_SERVER: REQUEST_METHOD => POST<br>
+_SERVER: QUERY_STRING => <br>
+_SERVER: REQUEST_URI => /MinIDE/MinIDE/MinIDE.php<br>
+_SERVER: SCRIPT_NAME => /MinIDE/MinIDE/MinIDE.php<br>
+_SERVER: PHP_SELF => /MinIDE/MinIDE/MinIDE.php<br>
+_SERVER: REQUEST_TIME_FLOAT => 1610840686.292<br>
+_SERVER: REQUEST_TIME => 1610840686<br>
+online : 
+iAction = 1)
+json length: 9
+Action(1):
+undefined
+oJson
+:
+load tree:
+<ul class="php-file-tree"><li class="pft-directory"><a href="#">addon</a><ul><li class="pft-directory"><a href="#">edit</a><ul><li class="pft-file ext-js"><a href="javascript:CallIDE(2,'mode/../addon/edit/matchbrackets.js');">matchbrackets.js</a></li></ul></li></ul></li><li class="pft-directory"><a href="#">doc</a><ul><li class="pft-file ext-css"><a href="javascript:CallIDE(2,'mode/../doc/docs.css');">docs.css</a></li></ul></li><li class="pft-directory"><a href="#">lib</a><ul><li class="pft-file ext-css"><a href="javascript:CallIDE(2,'mode/../lib/codemirror.css');">codemirror.css</a></li><li class="pft-file ext-js"><a href="javascript:CallIDE(2,'mode/../lib/codemirror.js');">codemirror.js</a></li></ul></li><li class="pft-directory"><a href="#">mode</a><ul><li class="pft-directory"><a href="#">css</a><ul><li class="pft-file ext-js"><a href="javascript:CallIDE(2,'mode/../mode/css/css.js');">css.js</a></li></ul></li><li class="pft-directory"><a href="#">htmlmixed</a><ul><li class="pft-file ext-js"><a href="javascript:CallIDE(2,'mode/../mode/htmlmixed/htmlmixed.js');">htmlmixed.js</a></li></ul></li><li class="pft-directory"><a href="#">javascript</a><ul><li class="pft-file ext-js"><a href="javascript:CallIDE(2,'mode/../mode/javascript/javascript.js');">javascript.js</a></li></ul></li><li class="pft-directory"><a href="#">xml</a><ul><li class="pft-file ext-js"><a href="javascript:CallIDE(2,'mode/../mode/xml/xml.js');">xml.js</a></li></ul></li></ul></li><li class="pft-directory"><a href="#">phpFileTree</a><ul><li class="pft-directory"><a href="#">styles</a><ul><li class="pft-directory"><a href="#">default</a><ul><li class="pft-directory"><a href="#">images</a><ul><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/application.png');">application.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/code.png');">code.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/css.png');">css.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/db.png');">db.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/directory.png');">directory.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/doc.png');">doc.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/file.png');">file.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/film.png');">film.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/flash.png');">flash.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/html.png');">html.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/java.png');">java.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/linux.png');">linux.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/music.png');">music.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/pdf.png');">pdf.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/php.png');">php.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/picture.png');">picture.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/ppt.png');">ppt.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/psd.png');">psd.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/ruby.png');">ruby.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/script.png');">script.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/txt.png');">txt.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/xls.png');">xls.png</a></li><li class="pft-file ext-png"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/images/zip.png');">zip.png</a></li></ul></li><li class="pft-file ext-css"><a href="javascript:CallIDE(2,'mode/../phpFileTree/styles/default/default.css');">default.css</a></li></ul></li></ul></li><li class="pft-file ext-php"><a href="javascript:CallIDE(2,'mode/../phpFileTree/demo_classic.php');">demo_classic.php</a></li><li class="pft-file ext-php"><a href="javascript:CallIDE(2,'mode/../phpFileTree/demo_jquery.php');">demo_jquery.php</a></li><li class="pft-file ext-js"><a href="javascript:CallIDE(2,'mode/../phpFileTree/php_file_tree.js');">php_file_tree.js</a></li><li class="pft-file ext-php"><a href="javascript:CallIDE(2,'mode/../phpFileTree/php_file_tree.php');">php_file_tree.php</a></li><li class="pft-file ext-js"><a href="javascript:CallIDE(2,'mode/../phpFileTree/php_file_tree_jquery.js');">php_file_tree_jquery.js</a></li><li class="pft-file ext-txt"><a href="javascript:CallIDE(2,'mode/../phpFileTree/README.txt');">README.txt</a></li></ul></li><li class="pft-file ext-css"><a href="javascript:CallIDE(2,'mode/../MinIDE.css');">MinIDE.css</a></li><li class="pft-file ext-js"><a href="javascript:CallIDE(2,'mode/../MinIDE.js');">MinIDE.js</a></li><li class="pft-file ext-log"><a href="javascript:CallIDE(2,'mode/../MinIDE.log');">MinIDE.log</a></li><li class="pft-file ext-php"><a href="javascript:CallIDE(2,'mode/../MinIDE.php');">MinIDE.php</a></li><li class="pft-file ext-txt"><a href="javascript:CallIDE(2,'mode/../test.txt');">test.txt</a></li><li class="pft-file ext-txt"><a href="javascript:CallIDE(2,'mode/../test 2.txt');">test 2.txt</a></li><li class="pft-file ext-php"><a href="javascript:CallIDE(2,'mode/../_common.php');">_common.php</a></li></ul>
+close log: 2021-01-17 00:44:46	duration [s]: 0.030508995056152

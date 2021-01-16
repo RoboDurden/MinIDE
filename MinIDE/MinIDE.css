@@ -74,3 +74,9 @@ span.MinIdeTab1
     background-color: #ffffff;
     border-bottom: none;
 }
+
+
+input.MinIdeMenu
+{
+    border-radius: 4pt;
+}

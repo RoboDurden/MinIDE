@@ -2,8 +2,11 @@
 
 function File(sPath,sValue)
 {
+    sPath = sPath.replace("\r","");
     this.m_sPath = sPath;
     this.m_sValue = sValue;
+    //this.m_sValueOrg = "";
+    this.m_bChanged = false;
 
     this.GetFormat = function()
     {with(this){
@@ -23,7 +26,11 @@ function File(sPath,sValue)
         let i = m_sPath.indexOf("../");
         let s = i < 0 ? m_sPath : m_sPath.substring(i+3);
         let sClass = bActive ? "MinIdeTab1" : "MinIdeTab0";
-        return '<span class="'+sClass+'"><a class="'+sClass+'" href="javascript:CallIDE(2,\''+m_sPath+'\');">'+s+'</a> <a class="'+sClass+'" style="color:#ff0000" href="javascript:CallIDE(3,\''+m_sPath+'\');">x</a></span>';
+        //let i1 = m_sValue.length; let i0 = m_sValueOrg.length;
+
+        //m_bChanged = m_sValueOrg.normalize() === m_sValue.normalize();
+        let sChanged = m_bChanged ? "* " : "";
+        return '<span class="'+sClass+'">'+sChanged+'<a class="'+sClass+'" href="javascript:CallIDE(2,\''+m_sPath+'\');">'+s+'</a> <a class="'+sClass+'" style="color:#ff0000" href="javascript:CallIDE(3,\''+m_sPath+'\');">x</a></span>';
         return '<input type="button" class="'+sClass+'" value="'+s+'" />';
     }}
     
@@ -44,6 +51,8 @@ function MinIDE(rContainer)
     this.m_hFile = {};
     this.m_oFile = null;
 
+    this.m_bChanges = false;
+
     this.m_aTabStack = [];
 
     this.GetHtml = function()
@@ -60,6 +69,28 @@ function MinIDE(rContainer)
         return this.m_oEditor.getValue()   
     }
 
+    this._SetMenu = function()
+    {with(this){
+
+        var s = "";
+
+        bChanges = false;
+        Object.values(m_hFile).forEach(oFile => 
+        {
+            if (oFile.m_bChanged)   bChanges = true;
+        });
+    
+        if (bChanges)
+            s += '<input type="button" class="MinIdeMenu" onClick="CallIDE(5);" value="Save All" />';
+
+
+        let r = document.getElementById("MinIDE_TopLeft"+m_oId);
+        r.innerHTML = s;
+
+    }}
+
+
+
     this._SetTabs = function()
     {with(this){
 
@@ -74,17 +105,30 @@ function MinIDE(rContainer)
 
     }}
 
-    this._OpenFile = function(oFile)
+    this.SaveOpenFile = function()
+    {with(this){
+
+        m_oFile.m_sValue = m_oEditor.getValue();
+        let sJson = JSON.stringify([m_oFile]);
+        SubmitAjax(4,sJson);
+
+    }}
+
+
+    this._OpenFile = function(oFile,bNew)
     {with(this){
         if (m_oFile)
             m_oFile.m_sValue = m_oEditor.getValue();
 
+        m_oFile = null;
         let r = document.getElementById("MinIDE_BottomRight"+m_oId);
         if (oFile)
         {
+            m_oEditor.setOption("mode", oFile.GetFormat());
+            m_oEditor.setValue(oFile.m_sValue);
             m_oFile = m_hFile[oFile.m_sPath] = oFile;
-            m_oEditor.setOption("mode", m_oFile.GetFormat());
-            m_oEditor.setValue(m_oFile.m_sValue);
+            //if (bNew)   m_oFile.m_sValue = m_oFile.m_sValueOrg = m_oEditor.getValue();
+
             r.style.visibility = "";
 
             m_aTabStack.push(m_oFile.m_sPath);
@@ -110,11 +154,17 @@ function MinIDE(rContainer)
                 _OpenFile(m_hFile[s]);
                 return;
             }
-            break;
+            SubmitAjax(2,s);
+            return;
         case 3:
             if (m_hFile[s])
             {
-                let bOpen = m_oFile == m_hFile[s];
+                let oFile = m_hFile[s];
+                if (oFile.m_bChanged)
+                    if (!confirm("skip changes ?"))
+                        return;
+
+                let bOpen = m_oFile == oFile;
                 delete m_hFile[s];
                 if (bOpen)
                 {
@@ -132,8 +182,22 @@ function MinIDE(rContainer)
 
             }
             return;
+        case 5: // save all
+            m_oFile.m_sValue = m_oEditor.getValue();
+
+            let aSave = [];
+            Object.values(m_hFile).forEach(oFile => 
+                {
+                    if (oFile.m_bChanged)
+                        aSave.push(oFile);
+                });
+        
+
+            let sJson = JSON.stringify(aSave);
+            SubmitAjax(4,sJson);
+    
+            return;
         }
-        SubmitAjax(iAction,s);
     }}
     
 
@@ -173,7 +237,7 @@ function MinIDE(rContainer)
         // Create our XMLHttpRequest object
         var hr = new XMLHttpRequest();
         // Create some variables we need to send to our PHP file
-        var sUrl = "MinIDE/ajax.php";
+        var sUrl = "MinIDE/MinIDE.php";
         hr.open("POST", sUrl, true);
         // Set content type header information for sending url encoded variables in the request
         //hr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -210,7 +274,17 @@ function MinIDE(rContainer)
                     init_php_file_tree();
                     break;
                 case 2:
-                    _OpenFile(new File(sJson,sJS));
+                    _OpenFile(new File(sJson,sJS),true);
+                    break;
+                case 4:
+                    let aSaved = JSON.parse(sJS);
+                    for(var i in aSaved)
+                    {
+                        if (m_hFile[aSaved[i]])
+                        m_hFile[aSaved[i]].m_bChanged = false;
+                    }
+                    _SetTabs();
+                    _SetMenu();
                     break;
                 default:
                     //ServerMess("update: "+ sJS.length);
@@ -258,7 +332,35 @@ function MinIDE(rContainer)
             m_oEditor = CodeMirror.fromTextArea(rTextArea, {
                 lineNumbers: true,
                 mode: "text/html",
-                matchBrackets: true
+                matchBrackets: true,
+                extraKeys: {
+                    "Ctrl-S": function(cm) {
+                        SaveOpenFile();
+                    },
+                    "F11": function(cm) {
+                        alert(cm,true); //function called for full screen mode 
+                    },
+                    "Esc": function(cm) {
+                        alert(cm,false); //function to escape full screen mode
+                    }
+                }
+
+            });
+
+            m_oEditor.on("change",function(cm,change){
+                if (m_oFile)
+                {
+                    if (!m_oFile.m_bChanged)
+                    {
+                        m_oFile.m_bChanged = true;
+                        _SetTabs();
+                    }
+                    if (!m_bChanges)
+                    {
+                        _SetMenu();
+                    }
+
+                }
             });
 
             SubmitAjax(1);
