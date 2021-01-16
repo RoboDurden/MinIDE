@@ -1,0 +1,25 @@
+table.MinIDE
+{
+    width:100%;
+}
+
+td.MinIDE_TopLeft
+{
+    width:10%;
+}
+
+td.MinIDE_BottomLeft
+{
+    vertical-align: top;
+}
+
+
+td.MinIDE_BottomRight
+{
+    height:100%;
+}
+
+textarea.MinIDE_Editor
+{
+    height:100%;
+}
