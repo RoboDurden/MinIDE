@@ -2,7 +2,6 @@
 
 function File(sPath,sValue)
 {
-    sPath = sPath.replace("\r","");
     this.m_sPath = sPath;
     this.m_sValue = sValue;
     //this.m_sValueOrg = "";
