@@ -1,6 +1,7 @@
 table.MinIDE
 {
     width:100%;
+    height:100%;
 }
 
 td.MinIDE_TopLeft
@@ -8,18 +9,34 @@ td.MinIDE_TopLeft
     width:10%;
 }
 
+
 td.MinIDE_BottomLeft
 {
-    vertical-align: top;
+    height:80vh;
 }
+
 
 
 td.MinIDE_BottomRight
 {
     height:100%;
+    vertical-align: top;
 }
 
 textarea.MinIDE_Editor
 {
     height:100%;
+}
+
+div.MinIDEServer
+{
+    position:absolute;
+    z-index: 100000;
+    left:10%;
+    top:5%;
+    width:80%;
+    border: outset 2px #ffaa00;
+    background-color: #ffee00;
+    color:#00ff00;
+    font-size:24pt;
 }

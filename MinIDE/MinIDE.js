@@ -12,7 +12,7 @@ function MinIDE(rContainer)
 
     this.GetHtml = function()
     {with(this){
-        var s = '<div id="server" style="display:none;position:absolute;left:10%;top:5%;width:80%;" onClick="this.style.display=\'none\'">server mess</div>';
+        var s = '<div id="server" class="MinIDEServer" style="display:none;" onClick="this.style.display=\'none\'">server mess</div>';
         s += '<table class="MinIDE" border=0><tr><td class="MinIDE_TopLeft" id="MinIDE_TopLeft'+m_oId+'"></td><td id="MinIDE_TopRight'+m_oId+'"></td></tr>';
         s += '<tr><td class="MinIDE_BottomLeft" id="MinIDE_BottomLeft'+m_oId+'"></td><td class="MinIDE_BottomRight" id="MinIDE_BottomRight'+m_oId+'"><textarea class="MinIDE_Editor" id="MinIDE_Editor'+m_oId+'"><script>\nvar sTest  = prompt("enter a string");\n</script></textarea></td></tr></table>';
         //alert(s);
@@ -74,13 +74,13 @@ function MinIDE(rContainer)
             switch (hr.readyState)
             {
             case 1:
-                ServerMess("server connection established",true);
+                //ServerMess("server connection established",true);
                 break;
             case 2: 
-                ServerMess("request received",true);
+                //ServerMess("request received",true);
                 break;
             case 3: 
-                ServerMess("processing request",true);
+                //ServerMess("processing request",true);
                 break;
             case 4: 
                 if(hr.status != 200) 
@@ -94,6 +94,8 @@ function MinIDE(rContainer)
                 {
                 case 1:
                     let r = document.getElementById("MinIDE_BottomLeft"+m_oId);
+
+                    sJS = '<div style="height:100%;vertical-align:top;overflow-y:scroll;">' + sJS + '</div>';
                     r.innerHTML = sJS;
                     init_php_file_tree();
                     break;
@@ -131,15 +133,18 @@ function MinIDE(rContainer)
                     }
                 }
     
-                var rDiv = document.getElementById("server");
-                rDiv.innerHTML = m_sMess;
-                rDiv.style.display = "";
-                m_sMess = "";
-            
-                window.setTimeout(function () 
+                if (m_sMess)
                 {
-                    rDiv.style.display = "none";
-                }, 3000);
+                    var rDiv = document.getElementById("server");
+                    rDiv.innerHTML = m_sMess;
+                    rDiv.style.display = "";
+                    m_sMess = "";
+                
+                    window.setTimeout(function () 
+                    {
+                        rDiv.style.display = "none";
+                    }, 3000);
+                }
             
     
             }
