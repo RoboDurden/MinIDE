@@ -178,6 +178,7 @@ function MinIDE(rContainer)
                 }
                 else 
                     _SetTabs();
+                _SetMenu();
 
             }
             return;
@@ -361,13 +362,8 @@ function MinIDE(rContainer)
 
                 }
             });
-
             SubmitAjax(1);
-        
         }
-
-    }
+   }
 
 }
-
-
