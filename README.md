@@ -1,6 +1,7 @@
 # MinIDE, a minimal IDE based on CodeMirror
 
 ## demo: https://www.robosoft.de/MinIDE/test.htm
+### config demo: https://www.robosoft.de/MinIDE/MinIDE/config.php
 
 ## usage:
 
