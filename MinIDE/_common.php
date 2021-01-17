@@ -7,6 +7,7 @@
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
 
 define('MEM_TRUE',FALSE);
+//error_reporting(E_NOTICE);
 
 define('C_bCacheLog',	isset($_GET['cachelog']) ? $_GET['cachelog'] : 1);
 define('C_bNoLog',		isset($_GET['setlog']) ? $_GET['setlog'] : 1);
@@ -19,7 +20,6 @@ define ('C_bShell',!isset($_SERVER['HTTP_HOST'])	);
 define ('C_bOnline', (	C_bShell ? 1 :	($_SERVER['HTTP_HOST'] != 'localhost') && ($_SERVER['SERVER_ADDR'] != '127.0.0.1' ) )	) ;
 
 $g_sMess 	= '';
-$g_sDebug	= '';
 
 function microtime_float()
 {
@@ -28,224 +28,63 @@ function microtime_float()
 }
 
 $g_iStartTime	= microtime_float();
-/******* _common.php ***********************************************************
-
-	DLookup($sFields,$sTables,$sWhere="",$iDebug=0)
-		SELECT $sFields FROM $sTables WHERE $sWhere LIMIT 1 
-		returns an array of the fields if succeeds
-		returns 0 if no result, if ($aRes === 0)
-		returns false if a sql error occured, if ($aRes === false)
-	ExecSQL($sSql,$iDebug=0)
-		executes a sql command like SELECT, returns a handle to fetch results
-	DoSQL($sSql,$iDebug=0)
-		does a sql command
-		returns number of affected rows (may return 0)
-		returns false if sql command failed.
-
-	mess($sMess)
-		for debugging, outputs $sMessage to screen if(C_bDebug)
-	x($sMess,$bReset=0)
-		for debugging, outputs $sMessage to log.txt if(!C_bNoLog)
-	Add2Array(&$ra,$vNew)
-		simple little stupid helper function to add $vNew to array $ra, if new
-	TimestampAdd($sT,$iS)
-		Adds $iS seconds to the timestamp, does it properly :-)
-	Timestamp()
-		returns a timestamp like "20051231235900"
-	Save($sPath,$sData)
-		basic function to save data to a file
-	Load($sPath,&$sData)
-		basic function to load data from a file
-	TasksDefault()
-		to assure that a $_REQUEST field is allways set
-
-********************************************************************************/
-
-
-//error_reporting(E_NOTICE);
-
 x("hello world :-) " . Timestamp(),1);
+x('online : '.C_bOnline);
 
 
 foreach($_GET AS $sKey => $sValue)	x("_GET: $sKey => $sValue");
 //foreach($_POST AS $sKey => $sValue)	x("_POST: $sKey => $sValue");
-foreach($_COOKIE AS $sKey => $sValue)	x("__COOKIE: $sKey => $sValue");
+//foreach($_COOKIE AS $sKey => $sValue)	x("__COOKIE: $sKey => $sValue");
 //foreach($_REQUEST AS $sKey => $sValue)	x("_REQUEST: $sKey => $sValue");
-
-
 foreach($_FILES AS $sKey => $aF)
 {
 	x("_FILES: $sKey => $aF");
-
 	foreach($aF AS $sKey => $sVal)
-	{
 		x("file $sKey: $sKey => $sVal<br>");
-	}
 }					
+//foreach($_SERVER AS $sKey => $sValue)	x("\$_SERVER['$sKey'] = $sValue<br>");
+//foreach($_ENV AS $sKey => $sValue)	x("\$_ENV['$sKey'] = $sValue<br>");
 
 
-foreach($_SERVER AS $sKey => $sValue)	x("_SERVER: $sKey => $sValue<br>");
-foreach($_ENV AS $sKey => $sValue)	x("_ENV: $sKey => $sValue<br>");
+$hConfig = array( 
+	"pPassword" => ""
+);
 
+define('CONFIG_PATH','configData.php');
 
-x('online : '.C_bOnline);
-
-
-
-function DLookup($sFields,$sTables,$sWhere="",$iDebug=0,$cFetch=MYSQL_NUM)
+function LoadConfig()
 {
-	global $g_oDb;
-	if ($sWhere)
+	$hConfig = array( "sRoot" => "mode/.."
+	, "sBlacklist" => ""
+	, "sWhitelist" => ""
+	, "sWhitelistSave" => "htm,js,css,txt"
+	, "pPassword" => ""
+	, "pPasswordNew1" => ""
+	, "pPasswordNew2" => ""
+	);
+	
+	if (Load(CONFIG_PATH,$sJson))
 	{
-		$sSql = "SELECT $sFields FROM $sTables WHERE $sWhere LIMIT 1";
+		$sJson = substr($sJson,8,-5);
+		x("LoadConfig()");	// : $sJson
+		$hConfig = json_decode($sJson, true);
+		if ($hConfig === null) 
+			die ("could not parse ".CONFIG_PATH);
 	}
-	else
-	{
-		$sSql = "SELECT $sFields FROM $sTables LIMIT 1";
-	}
-	if ($iDebug)
-	{
-		mess("DLookup( $sSql )");
-		if ($iDebug == 2)
-		{
-			x("DLookup:\n$sSql");
-		}
-	}
+	return $hConfig;
+}
 
-    $hResult = mysql_query($sSql,$g_oDb);
-    if ($hResult)
-	{    
-	    $aRes = mysql_fetch_array($hResult, $cFetch);
-	    $iRows = mysql_num_rows($hResult);
-		if ($iDebug)
-		{
-			mess("rows = $iRows: ". (($iRows>1) ? implode(' , ',$aRes): ''));
-			if ($iDebug == 2)
-			{
-				x("rows = $iRows: ". (($iRows>1) ? implode(' , ',$aRes): ''));
-			}
-		}
-	    mysql_free_result($hResult);
-
-		if (!$iRows)
-		{
-			return 0;
-		}
-		return $aRes;
-    }
-	else	MailError("DoLookup: $sSql",$sSql);
-    
+function  SaveConfig()
+{
+	global $hConfig;
+    $sJson = str_replace('","',"\",\n\"",json_encode($hConfig));
+	//x("saving config to ".CONFIG_PATH.": $sJson");
+	if (Save(CONFIG_PATH,"<?php/*\n$sJson\n*/?>"))
+		return true;
 	return false;
+	
 }
 
-function ExecSQL($sSql,$iDebug=0)
-{
-	global $g_oDb;
-	if ($iDebug)
-	{
-		mess($sSql);
-		if ($iDebug == 2)
-		{
-			x($sSql);
-		}
-	}
-	if (!$sSql)
-	{
-		mess('error ExecSQL, no sql string');
-		return 0;
-	}
-		
-	$hResult = mysql_query($sSql,$g_oDb);
-	if (!$hResult)	MailError("ExecSql: $sSql",$sSql);
-
-	if ($iDebug)
-	{
-		if ($hResult)
-		{
-			$iRows = mysql_num_rows($hResult);
-		}
-		else
-		{
-			$iRows = 0;
-		}
-		mess("rows = $iRows");
-		if ($iDebug == 2)
-		{
-			x("rows = $iRows");
-		}
-	}
-	
-	return $hResult;
-}
-
-
-function DoSQL($sSql,$iDebug=0)
-{
-	global $g_oDb;
-	$iRows = 0;
-	if ($iDebug)
-	{
-		mess($sSql);
-		if ($iDebug == 2)
-		{
-			x($sSql);
-		}
-	}
-
-	for ($i=3; $i>0; $i--)
-	{
-	    $bSuccess = mysql_query($sSql,$g_oDb);
-	    if ($bSuccess)
-		{
-			$iRows = mysql_affected_rows($g_oDb);
-			if ($iDebug)
-			{
-				$sMess = 'success, affected rows: '.$iRows;
-				mess($sMess);
-				if ($iDebug == 2)
-				{
-					x($sMess);
-				}
-			}
-			return $iRows;
-		}
-	}
-	//MailError("DoSql 3 retries: $sSql",$sSql);
-	
-	$sPath = 'sqlFail.txt';
-   	$hfile = fopen($sPath, "a");
-	if (!$hfile)
-	{
-		x("the file $sPath could not be opened for appending :-(");
-		return 0;
-	}
-	$sFail = Timestamp(). "\t$sSql\n";
-	fwrite($hfile, $sFail);
-	fclose($hfile);
-	
-	return FALSE;
-}
-
-
-function MailError($sSubject,$sBody)
-{
-	x("********************* MailError($sSubject,$sBody)");
-	global $rS;
-	$sBody = C_sUrlBase."\n$sBody
-	
-_GET		= " . print_r($_GET,TRUE) . "
-_POST		= " . print_r($_POST,TRUE) . "
-_REQUEST	= " . print_r($_REQUEST,TRUE) ;
-	
-
-	if (C_bOnline)
-	{
-		if (mail('robokaputt@yahoo.de',"ERROR $sSubject",$sBody))
-			x("error mail sent :-)");
-		else	x("error mail failed: $sSubject \n\n$sBody");
-	}
-	else Error("ERROR $sSubject",0);
-}
 
 
 function TasksDefault()
@@ -257,14 +96,6 @@ function TasksDefault()
         {
 			$_REQUEST[func_get_arg($i)] = func_get_arg($i+1);
 		}
-	}
-}
-
-function mess($sMess)
-{
-	if (C_bDebug)
-	{
-		echo($sMess.'<br>');
 	}
 }
 
@@ -305,8 +136,7 @@ function x ($sMess,$bReset=0)
     $hfile = fopen(C_sLogFile, $sMode);
 	if (!$hfile)
 	{
-		mess("log file ".C_sLogFile." could not be opened (access=$sMode) :-(");
-		return 0;
+		die("log file ".C_sLogFile." could not be opened (access=$sMode) :-(");
 	}
 	fwrite($hfile, $sMess."\n");
 	fclose($hfile);
@@ -324,8 +154,7 @@ function xx()
         $hfile = fopen(C_sLogFile, 'w');
 		if (!$hfile)
 		{
-			mess("log file " . C_sLogFile . " could not be opened for write :-(");
-			return 0;
+			die("log file " . C_sLogFile . " could not be opened for write :-(");
 		}
 		$g_sMess .= $sMess;
 		fwrite($hfile, $g_sMess);

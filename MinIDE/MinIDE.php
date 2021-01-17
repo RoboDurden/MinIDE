@@ -1,5 +1,6 @@
 <?php
 
+
 define('C_IdeRoot',	"mode/.."); // the root folder is hard coded
 
 
@@ -16,6 +17,8 @@ require('_common.php');
 if (!isset($_REQUEST['action']))
     die ("ServerMess('no action');");
 
+$oConfig = (object) LoadConfig();
+
 
 $iAction = $_REQUEST['action'];
 $sJson = $_REQUEST['json'];
@@ -28,6 +31,7 @@ xx();
 
 function Action($iAction,$sJson)
 {
+    global $oConfig;
     x("Action($iAction):\n$sJson");
 
     $oJson = json_decode($sJson);
@@ -37,7 +41,7 @@ function Action($iAction,$sJson)
     {
         case 1: // load tree
             require("phpFileTree/php_file_tree.php");
-            $sHtml = php_file_tree(C_IdeRoot, "javascript:CallIDE(2,'[link]');");
+            $sHtml = php_file_tree($oConfig->sRoot, "javascript:CallIDE(2,'[link]');");
             x("load tree:\n$sHtml");
             echo $sHtml;
         return;
@@ -46,13 +50,25 @@ function Action($iAction,$sJson)
             echo $s;
         return;
     case 4: // save Files
-        $aSaved = array();
+        $oRet = (object) array('aSaved' => array()    , 'hNot' => array());
         foreach($oJson AS $i => $o)
         {
-            if (Save($o->m_sPath,$o->m_sValue))
-                $aSaved[] = $o->m_sPath;
+            x("checking $o->m_sPath");
+            if (preg_match('/([^.]+)$/',$o->m_sPath,$aM))
+            {
+                $aWhite = explode(",",$oConfig->sWhitelistSave);
+                x("$aM[1] in whitelist: ".implode(" , ",$aWhite));
+                if (array_search($aM[1],$aWhite) !== FALSE)
+                {
+                    if (Save($o->m_sPath,$o->m_sValue))
+                        $oRet->aSaved[] = $o->m_sPath;
+                }
+                else
+                    $oRet->hNot[$aM[1]] = 1;
+
+            }
         }
-        echo json_encode($aSaved);
+        echo json_encode($oRet);
         return;
     }
 }

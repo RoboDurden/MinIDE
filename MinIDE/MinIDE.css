@@ -33,7 +33,7 @@ textarea.MinIDE_Editor
     height:100%;
 }
 
-div.MinIDEServer
+div.MinIDEServerMess
 {
     position:absolute;
     z-index: 100000;
@@ -42,8 +42,9 @@ div.MinIDEServer
     width:80%;
     border: outset 2px #ffaa00;
     background-color: #ffee00;
-    color:#00ff00;
+    color:#005500;
     font-size:24pt;
+    text-align: center;
 }
 
 a.MinIdeTab0

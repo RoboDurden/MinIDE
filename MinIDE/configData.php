@@ -1,0 +1,9 @@
+<?php/*
+{"pPassword":"",
+"pPasswordNew1":"",
+"pPasswordNew2":"",
+"sBlacklist":"",
+"sRoot":"mode\/..",
+"sWhitelist":"",
+"sWhitelistSave":"txt,log"}
+*/?>

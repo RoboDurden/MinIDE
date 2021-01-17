@@ -13,7 +13,7 @@ function File(sPath,sValue)
         if (aM)
         {
             let sExt = aM[1].toLowerCase();
-            var h = {"js":"text/javascript", "c":"text/x-csrc", "h":"text/x-csrc", "css":"text/css", "htm":"text/html", "html":"text/html", "php":"text/x-php"};
+            var h = {"js":"text/javascript", "c":"text/x-csrc", "h":"text/x-csrc", "css":"text/css", "htm":"text/html", "html":"text/html", "php":"application/x-httpd-php"};
             if (h[sExt])
                 return h[sExt];
         }
@@ -56,7 +56,7 @@ function MinIDE(rContainer)
 
     this.GetHtml = function()
     {with(this){
-        var s = '<div id="server" class="MinIDEServer" style="display:none;" onClick="this.style.display=\'none\'">server mess</div>';
+        var s = '<div id="ServerMess" class="MinIDEServerMess" style="display:none;" onClick="this.style.display=\'none\'">server mess</div>';
         s += '<table class="MinIDE" border=0><tr><td class="MinIDE_TopLeft" id="MinIDE_TopLeft'+m_oId+'"></td><td id="MinIDE_TopRight'+m_oId+'"></td></tr>';
         s += '<tr><td class="MinIDE_BottomLeft" id="MinIDE_BottomLeft'+m_oId+'"></td><td class="MinIDE_BottomRight"style="visibility:hidden;" id="MinIDE_BottomRight'+m_oId+'"><textarea class="MinIDE_Editor" id="MinIDE_Editor'+m_oId+'"></textarea></td></tr></table>';
         //alert(s);
@@ -205,7 +205,7 @@ function MinIDE(rContainer)
     {with(this){
         if (bInstant)
         {
-            var rDiv = document.getElementById("server");
+            var rDiv = document.getElementById("ServerMess");
             rDiv.innerHTML = sMess;
             rDiv.style.display = "";
             return;
@@ -277,12 +277,20 @@ function MinIDE(rContainer)
                     _OpenFile(new File(sJson,sJS),true);
                     break;
                 case 4:
-                    let aSaved = JSON.parse(sJS);
-                    for(var i in aSaved)
+                    let oSaved = JSON.parse(sJS);
+                    for(var i in oSaved.aSaved)
                     {
-                        if (m_hFile[aSaved[i]])
-                        m_hFile[aSaved[i]].m_bChanged = false;
+                        let oFile = m_hFile[oSaved.aSaved[i]];
+                        if (oFile) oFile.m_bChanged = false;
                     }
+                    let aNot = [];
+                    Object.keys(oSaved.hNot).forEach(sNot => 
+                        {
+                            aNot.push(sNot);
+                        });
+                    if (aNot.length)
+                        ServerMess("can not save files of type" + (aNot.length>1 ? "s":"") +" : " + aNot.join(" , "));
+                
                     _SetTabs();
                     _SetMenu();
                     break;
@@ -302,7 +310,7 @@ function MinIDE(rContainer)
     
                 if (m_sMess)
                 {
-                    var rDiv = document.getElementById("server");
+                    var rDiv = document.getElementById("ServerMess");
                     rDiv.innerHTML = m_sMess;
                     rDiv.style.display = "";
                     m_sMess = "";
@@ -336,13 +344,17 @@ function MinIDE(rContainer)
                 extraKeys: {
                     "Ctrl-S": function(cm) {
                         SaveOpenFile();
-                    },
-                    "F11": function(cm) {
-                        alert(cm,true); //function called for full screen mode 
-                    },
-                    "Esc": function(cm) {
-                        alert(cm,false); //function to escape full screen mode
                     }
+                    ,"Ctrl-W": function(cm) {   // does not work, strg+w closes the entire window :-(
+                        CallIDE(3,m_oFile.m_sPath);
+                    }
+                    /*
+                    , "F11": function(cm) {
+                        alert(cm,true); //function called for full screen mode 
+                    }
+                    , "Esc": function(cm) {
+                        alert(cm,false); //function to escape full screen mode
+                    }*/
                 }
 
             });
