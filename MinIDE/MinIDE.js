@@ -82,6 +82,7 @@ function MinIDE(sContainerId)
 
     this.m_sContainerId = sContainerId;
     this.m_iWidth = 100;
+    this.m_iHeight = 100;
 
     this.m_oEditor = null;
 
@@ -163,12 +164,12 @@ function MinIDE(sContainerId)
 
         let rContainer = document.getElementById(m_sContainerId);
         m_iWidth = parseInt(rContainer.style.width);
-        let iHeight = parseInt(rContainer.style.height);
+        m_iHeight = parseInt(rContainer.style.height);
 
-        var s = '<style>.CodeMirror { height: auto; max-height:'+Math.round(0.95*iHeight)+'vh;width:'+Math.round(0.83*m_iWidth)+'vw; border: 1px solid #ddd; }.CodeMirror-scroll { max-height:'+iHeight+'vh; }.CodeMirror pre { padding-left: 7px; line-height: 1.25; }</style>';
+        var s = '<style>.CodeMirror { height: auto; max-height:'+Math.round(0.95*m_iHeight)+'vh;width:'+Math.round(0.83*m_iWidth)+'vw; border: 1px solid #ddd; }.CodeMirror-scroll { max-height:'+m_iHeight+'vh; }.CodeMirror pre { padding-left: 7px; line-height: 1.25; }</style>';
         s+= '<div id="ServerMess" class="MinIDEServerMess" style="display:none;" onClick="this.style.display=\'none\'">server mess</div>';
-        s += '<table class="MinIDE" border=0><tr><td class="MinIDE_TopLeft" style="height:'+Math.round(0.05*iHeight)+'vh" id="MinIDE_TopLeft'+m_iId+'"></td><td id="MinIDE_TopRight'+m_iId+'"></td></tr>';
-        s += '<tr><td class="MinIDE_BottomLeft" style="height:'+Math.round(0.95*iHeight)+'vh" id="MinIDE_BottomLeft'+m_iId+'"></td><td class="MinIDE_BottomRight"style="visibility:hidden;vertical-align: top;" id="MinIDE_BottomRight'+m_iId+'"><textarea class="MinIDE_Editor" style="height:100%" id="MinIDE_Editor'+m_iId+'"></textarea></td></tr></table>';
+        s += '<table class="MinIDE" border=0><tr><td class="MinIDE_TopLeft" style="height:'+Math.round(0.05*m_iHeight)+'vh" id="MinIDE_TopLeft'+m_iId+'"></td><td id="MinIDE_TopRight'+m_iId+'"></td></tr>';
+        s += '<tr><td class="MinIDE_BottomLeft" style="height:'+Math.round(0.95*m_iHeight)+'vh" id="MinIDE_BottomLeft'+m_iId+'"></td><td class="MinIDE_BottomRight"style="visibility:hidden;vertical-align: top;" id="MinIDE_BottomRight'+m_iId+'"><textarea class="MinIDE_Editor" style="height:100%" id="MinIDE_Editor'+m_iId+'"></textarea></td></tr></table>';
         //alert(s);
 
         rContainer.innerHTML = s;
@@ -213,6 +214,8 @@ function MinIDE(sContainerId)
         let r = document.getElementById("MinIDE_TopRight"+m_iId);
         r.innerHTML = s;
 
+        //alert(r.parentNode.parentNode.offsetHeight);
+        //var oS = document.getElementsByClassName('CodeMirror')[0];
     }}
 
     this.SaveOpenFile = function()
