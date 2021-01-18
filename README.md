@@ -12,7 +12,7 @@
   <meta charset="utf-8"/>
  </head>
 <body>
-  <div id="IDE" style="height:80%;"></div>
+  <div id="IDE" style="width:90vw;height:80vh;border:1px solid grey;"></div>
 
   <script src="MinIDE/MinIDE.js"></script>
   <script>
@@ -23,6 +23,7 @@
 </body>
 </html>
 ```
+- the width and height of the container must be specified in absolute browser width/height percentage vw/vh :-(
 
 - the root folder, white list, etc. can be set in MinIDE/config.php
 
