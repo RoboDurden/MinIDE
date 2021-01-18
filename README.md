@@ -21,7 +21,8 @@
 
   <a href="javascript:alert(oIDE.GetValue());">Compile</a>
 </body>
-</html>```
+</html>
+```
 
 - the root folder, white list, etc. can be set in MinIDE/config.php
 
