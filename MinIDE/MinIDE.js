@@ -149,7 +149,7 @@ function MinIDE(rContainer)
     this._Load = function()
     {with(this){
         if (!_aLoad.length)
-            _Init();
+            return _Init();
 
         let sLoad = _aLoad.shift();
         loadJS("MinIDE/"+sLoad,this,"_Load");
@@ -163,7 +163,7 @@ function MinIDE(rContainer)
         var s = '<style>.CodeMirror { height: auto; max-width:87vw; border: 1px solid #ddd; }.CodeMirror-scroll { max-height: 80vh; }.CodeMirror pre { padding-left: 7px; line-height: 1.25; }</style>';
         s+= '<div id="ServerMess" class="MinIDEServerMess" style="display:none;" onClick="this.style.display=\'none\'">server mess</div>';
         s += '<table class="MinIDE" border=0><tr><td class="MinIDE_TopLeft" id="MinIDE_TopLeft'+m_iId+'"></td><td id="MinIDE_TopRight'+m_iId+'"></td></tr>';
-        s += '<tr><td class="MinIDE_BottomLeft" id="MinIDE_BottomLeft'+m_iId+'"></td><td class="MinIDE_BottomRight"style="visibility:hidden;" id="MinIDE_BottomRight'+m_iId+'"><textarea class="MinIDE_Editor" id="MinIDE_Editor'+m_iId+'"></textarea></td></tr></table>';
+        s += '<tr class="MinIDE_BottomLeft"><td class="MinIDE_BottomLeft" id="MinIDE_BottomLeft'+m_iId+'"></td><td class="MinIDE_BottomRight"style="visibility:hidden;" id="MinIDE_BottomRight'+m_iId+'"><textarea class="MinIDE_Editor" id="MinIDE_Editor'+m_iId+'"></textarea></td></tr></table>';
         //alert(s);
         return s;
     }}

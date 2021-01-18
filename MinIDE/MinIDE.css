@@ -13,8 +13,9 @@ td.MinIDE_TopRight
 {
     width:90%;
 }
-td.MinIDE_BottomLeft
+tr.MinIDE_BottomLeft
 {
+    height:95%; /* Firefox need a height for TR so height:100% works in TD :-/ */
 }
 td.MinIDE_BottomRight
 {
