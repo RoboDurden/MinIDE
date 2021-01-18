@@ -1,6 +1,6 @@
-hello world :-) 2021-01-17 14:15:38
+hello world :-) 2021-01-18 12:48:39
 online : 
 load file 'configData.php'
 LoadConfig()
 saving file configData.php ...
-close log: 2021-01-17 14:15:38	duration [s]: 0.022809028625488
+close log: 2021-01-18 12:48:39	duration [s]: 0.0027170181274414

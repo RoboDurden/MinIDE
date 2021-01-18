@@ -6,25 +6,18 @@ table.MinIDE
 
 td.MinIDE_TopLeft
 {
+    height:5%;
     width:10%;
 }
-
 td.MinIDE_TopRight
 {
+    width:90%;
 }
-
-
-
 td.MinIDE_BottomLeft
 {
-    height:80vh;
 }
-
-
-
 td.MinIDE_BottomRight
 {
-    height:100%;
     vertical-align: top;
 }
 

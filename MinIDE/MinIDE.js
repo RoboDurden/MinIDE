@@ -1,4 +1,38 @@
 
+var loadJS = function(url, rObject,rCallback){
+    var aM = url.match(/\.([^.]+)$/);
+    let sExt = aM[1].toLowerCase();
+
+    var scriptTag;
+    switch (sExt)
+    {
+    case "js":
+        scriptTag = document.createElement("script");
+        scriptTag.type = "text/javascript";
+        scriptTag.src = url;
+        break;
+    case "css":
+        scriptTag = document.createElement("link");
+        scriptTag.rel = "stylesheet";
+        scriptTag.type = "text/css";
+        scriptTag.media="screen";
+        scriptTag.href = url;
+        break;
+    }
+
+    scriptTag.rObject = rObject;
+    scriptTag.rCallback = rCallback;
+
+    scriptTag.onerror = function(){alert(url + " not found -> aboarting MinIDE :-(")};
+    if (rCallback)
+    {
+        scriptTag.onload = function(){
+            this.rObject[rCallback]();
+        };
+    }
+
+    document.body.appendChild(scriptTag);
+};
 
 function File(sPath,sValue)
 {
@@ -20,7 +54,7 @@ function File(sPath,sValue)
         return "text/plain";
     }}
 
-    this.GetHtmlTab = function(bActive)
+    this.GetHtmlTab = function(iId,bActive)
     {with(this){
         let i = m_sPath.indexOf("../");
         let s = i < 0 ? m_sPath : m_sPath.substring(i+3);
@@ -29,19 +63,24 @@ function File(sPath,sValue)
 
         //m_bChanged = m_sValueOrg.normalize() === m_sValue.normalize();
         let sChanged = m_bChanged ? "* " : "";
-        return '<span class="'+sClass+'">'+sChanged+'<a class="'+sClass+'" href="javascript:CallIDE(2,\''+m_sPath+'\');">'+s+'</a> <a class="'+sClass+'" style="color:#ff0000" href="javascript:CallIDE(3,\''+m_sPath+'\');">x</a></span>';
+        return '<span class="'+sClass+'">'+sChanged+'<a class="'+sClass+'" href="javascript:CallIDE('+iId+',2,\''+m_sPath+'\');">'+s+'</a>&nbsp;<a class="'+sClass+'" style="color:#ff0000" href="javascript:CallIDE('+iId+',3,\''+m_sPath+'\');">x</a></span> ';
         return '<input type="button" class="'+sClass+'" value="'+s+'" />';
     }}
     
 }
 
+var g_aoMindIDE = [];
+function CallIDE(iID,iAction,s)
+{
+    g_aoMindIDE[iID].CallIDE(iAction,s);
+}
 
-
-var g_IdMinIDE = 1;
 function MinIDE(rContainer)
 {
-    this.m_oId = g_IdMinIDE++;
-    this.m_rContainer = null;
+    this.m_iId = g_aoMindIDE.length;
+    g_aoMindIDE.push(this);
+
+    this.m_rContainer = rContainer;
 
     this.m_oEditor = null;
 
@@ -54,11 +93,77 @@ function MinIDE(rContainer)
 
     this.m_aTabStack = [];
 
+    this._aLoad = ["CodeMirror/lib/codemirror.css","CodeMirror/doc/docs.css","phpFileTree/styles/default/default.css","MinIDE.css"
+        ,"CodeMirror/lib/codemirror.js","CodeMirror/addon/edit/matchbrackets.js","phpFileTree/php_file_tree.js"];
+
+
+
+    this._Init = function()
+    {with(this){
+      
+        m_rContainer = document.getElementById(m_rContainer);
+        m_rContainer.innerHTML = GetHtml();
+
+        let rTextArea = document.getElementById("MinIDE_Editor"+m_iId);
+
+        m_oEditor = CodeMirror.fromTextArea(rTextArea, {
+            lineNumbers: true,
+            mode: "text/html",
+            matchBrackets: true,
+            extraKeys: {
+                "Ctrl-S": function(cm) {
+                    SaveOpenFile();
+                }
+                ,"Ctrl-W": function(cm) {   // does not work, strg+w closes the entire window :-(
+                    CallIDE(3,m_oFile.m_sPath);
+                }
+                /*
+                , "F11": function(cm) {
+                    alert(cm,true); //function called for full screen mode 
+                }
+                , "Esc": function(cm) {
+                    alert(cm,false); //function to escape full screen mode
+                }*/
+            }
+
+        });
+
+        m_oEditor.on("change",function(cm,change){
+            if (m_oFile)
+            {
+                if (!m_oFile.m_bChanged)
+                {
+                    m_oFile.m_bChanged = true;
+                    _SetTabs();
+                }
+                if (!m_bChanges)
+                {
+                    _SetMenu();
+                }
+
+            }
+        });
+        SubmitAjax(1,m_iId);
+    }}
+
+    this._Load = function()
+    {with(this){
+        if (!_aLoad.length)
+            _Init();
+
+        let sLoad = _aLoad.shift();
+        loadJS("MinIDE/"+sLoad,this,"_Load");
+    }}
+
+    this._Load();
+
+
     this.GetHtml = function()
     {with(this){
-        var s = '<div id="ServerMess" class="MinIDEServerMess" style="display:none;" onClick="this.style.display=\'none\'">server mess</div>';
-        s += '<table class="MinIDE" border=0><tr><td class="MinIDE_TopLeft" id="MinIDE_TopLeft'+m_oId+'"></td><td id="MinIDE_TopRight'+m_oId+'"></td></tr>';
-        s += '<tr><td class="MinIDE_BottomLeft" id="MinIDE_BottomLeft'+m_oId+'"></td><td class="MinIDE_BottomRight"style="visibility:hidden;" id="MinIDE_BottomRight'+m_oId+'"><textarea class="MinIDE_Editor" id="MinIDE_Editor'+m_oId+'"></textarea></td></tr></table>';
+        var s = '<style>.CodeMirror { height: auto; max-width:87vw; border: 1px solid #ddd; }.CodeMirror-scroll { max-height: 80vh; }.CodeMirror pre { padding-left: 7px; line-height: 1.25; }</style>';
+        s+= '<div id="ServerMess" class="MinIDEServerMess" style="display:none;" onClick="this.style.display=\'none\'">server mess</div>';
+        s += '<table class="MinIDE" border=0><tr><td class="MinIDE_TopLeft" id="MinIDE_TopLeft'+m_iId+'"></td><td id="MinIDE_TopRight'+m_iId+'"></td></tr>';
+        s += '<tr><td class="MinIDE_BottomLeft" id="MinIDE_BottomLeft'+m_iId+'"></td><td class="MinIDE_BottomRight"style="visibility:hidden;" id="MinIDE_BottomRight'+m_iId+'"><textarea class="MinIDE_Editor" id="MinIDE_Editor'+m_iId+'"></textarea></td></tr></table>';
         //alert(s);
         return s;
     }}
@@ -80,10 +185,10 @@ function MinIDE(rContainer)
         });
     
         if (bChanges)
-            s += '<input type="button" class="MinIdeMenu" onClick="CallIDE(5);" value="Save All" />';
+            s += '<input type="button" class="MinIdeMenu" onClick="CallIDE('+m_iId+',5);" value="Save All" />';
 
 
-        let r = document.getElementById("MinIDE_TopLeft"+m_oId);
+        let r = document.getElementById("MinIDE_TopLeft"+m_iId);
         r.innerHTML = s;
 
     }}
@@ -97,9 +202,9 @@ function MinIDE(rContainer)
 
         Object.values(m_hFile).forEach(oFile => 
         {
-            s += oFile.GetHtmlTab(oFile == m_oFile);
+            s += oFile.GetHtmlTab(m_iId,oFile == m_oFile);
         });
-        let r = document.getElementById("MinIDE_TopRight"+m_oId);
+        let r = document.getElementById("MinIDE_TopRight"+m_iId);
         r.innerHTML = s;
 
     }}
@@ -113,6 +218,10 @@ function MinIDE(rContainer)
 
     }}
 
+    this._SetEditor = function()
+    {with(this){
+        m_oEditor.setValue(m_oFile.m_sValue);
+    }}
 
     this._OpenFile = function(oFile,bNew)
     {with(this){
@@ -120,10 +229,14 @@ function MinIDE(rContainer)
             m_oFile.m_sValue = m_oEditor.getValue();
 
         m_oFile = null;
-        let r = document.getElementById("MinIDE_BottomRight"+m_oId);
+        let r = document.getElementById("MinIDE_BottomRight"+m_iId);
         if (oFile)
         {
             m_oEditor.setOption("mode", oFile.GetFormat());
+            
+//            m_oFile = m_hFile[oFile.m_sPath] = oFile;
+//            loadJS("MinIDE/mode/javascript/javascript.js",this._SetEditor);
+
             m_oEditor.setValue(oFile.m_sValue);
             m_oFile = m_hFile[oFile.m_sPath] = oFile;
             //if (bNew)   m_oFile.m_sValue = m_oFile.m_sValueOrg = m_oEditor.getValue();
@@ -267,9 +380,40 @@ function MinIDE(rContainer)
                 switch(iAction)
                 {
                 case 1:
-                    let r = document.getElementById("MinIDE_BottomLeft"+m_oId);
 
-                    sJS = '<div style="height:100%;vertical-align:top;overflow-y:scroll;">' + sJS + '</div>';
+                    let hType = {
+                        "php"   :["htmlmixed","xml","javascript","css","clike","php"]
+                        , "js"  :["javascript"]
+                        , "css" :["css"]
+                        , "htm" :["xml","javascript.js","css","vbscript.js","htmlmixed"]
+                        , "html" :["xml","javascript.js","css","vbscript.js","htmlmixed"]
+                    };
+                    let hLoad = {};
+
+                    var re = /([^.]+)'\);/g;
+                    var m;
+                    do {
+                        m = re.exec(sJS);
+                        if (m)  
+                            for (var i in hType[m[1]])  
+                                hLoad[hType[m[1]][i]] = 1;
+                    } while (m);
+
+                    for (var sLoad in hLoad)    loadJS("MinIDE/CodeMirror/mode/"+sLoad+"/"+sLoad+".js");
+
+/*                        
+                        <script src="MinIDE/mode/xml/xml.js"></script>
+                        <script src="MinIDE/mode/javascript/javascript.js"></script>
+                        <script src="MinIDE/mode/css/css.js"></script>
+                        <script src="MinIDE/mode/clike/clike.js"></script>
+                        <script src="MinIDE/mode/php/php.js"></script>
+                        <script src="MinIDE/mode/htmlmixed/htmlmixed.js"></script>
+  */                                            
+                        
+
+                    let r = document.getElementById("MinIDE_BottomLeft"+m_iId);
+
+                    sJS = '<div style="height:100%;max-width:20vw;vertical-align:top;overflow:scroll;">' + sJS + '</div>';
                     r.innerHTML = sJS;
                     init_php_file_tree();
                     break;
@@ -328,54 +472,5 @@ function MinIDE(rContainer)
         hr.send(oData); // Actually execute the request
     }}
     
-    with (this)
-    {
-        if (rContainer)
-        {
-            m_rContainer = document.getElementById(rContainer);
-            m_rContainer.innerHTML = GetHtml();
-
-            let rTextArea = document.getElementById("MinIDE_Editor"+m_oId);
-
-            m_oEditor = CodeMirror.fromTextArea(rTextArea, {
-                lineNumbers: true,
-                mode: "text/html",
-                matchBrackets: true,
-                extraKeys: {
-                    "Ctrl-S": function(cm) {
-                        SaveOpenFile();
-                    }
-                    ,"Ctrl-W": function(cm) {   // does not work, strg+w closes the entire window :-(
-                        CallIDE(3,m_oFile.m_sPath);
-                    }
-                    /*
-                    , "F11": function(cm) {
-                        alert(cm,true); //function called for full screen mode 
-                    }
-                    , "Esc": function(cm) {
-                        alert(cm,false); //function to escape full screen mode
-                    }*/
-                }
-
-            });
-
-            m_oEditor.on("change",function(cm,change){
-                if (m_oFile)
-                {
-                    if (!m_oFile.m_bChanged)
-                    {
-                        m_oFile.m_bChanged = true;
-                        _SetTabs();
-                    }
-                    if (!m_bChanges)
-                    {
-                        _SetMenu();
-                    }
-
-                }
-            });
-            SubmitAjax(1);
-        }
-   }
 
 }

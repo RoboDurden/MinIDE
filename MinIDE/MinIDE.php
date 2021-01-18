@@ -40,8 +40,9 @@ function Action($iAction,$sJson)
     switch ($iAction)
     {
         case 1: // load tree
+            $iId = $sJson;
             require("phpFileTree/php_file_tree.php");
-            $sHtml = php_file_tree($oConfig->sRoot, "javascript:CallIDE(2,'[link]');");
+            $sHtml = php_file_tree($oConfig->sRoot, "javascript:CallIDE($iId,2,'[link]');");
             x("load tree:\n$sHtml");
             echo $sHtml;
         return;

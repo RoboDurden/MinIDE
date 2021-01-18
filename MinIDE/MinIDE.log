@@ -1,12 +1,12 @@
-hello world :-) 2021-01-17 14:28:34
+hello world :-) 2021-01-18 13:49:34
 online : 
 load file 'configData.php'
 LoadConfig()
 iAction = 2)
-json length: 18
+json length: 23
 Action(2):
-mode/../MinIDE.css
+CodeMirror/../MinIDE.js
 oJson
 :
-load file 'mode/../MinIDE.css'
-close log: 2021-01-17 14:28:34	duration [s]: 0.00074219703674316
+load file 'CodeMirror/../MinIDE.js'
+close log: 2021-01-18 13:49:34	duration [s]: 0.0005648136138916

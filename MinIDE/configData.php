@@ -3,7 +3,7 @@
 "pPasswordNew1":"",
 "pPasswordNew2":"",
 "sBlacklist":"",
-"sRoot":"mode\/..",
+"sRoot":"CodeMirror\/..",
 "sWhitelist":"",
 "sWhitelistSave":"txt,log"}
 */?>
