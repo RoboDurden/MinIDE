@@ -1,12 +1,508 @@
-hello world :-) 2021-01-18 15:21:42
+hello world :-) 2021-01-18 17:32:03
 online : 
 load file 'configData.php'
 LoadConfig()
-iAction = 2)
-json length: 24
-Action(2):
-CodeMirror/../MinIDE.log
+iAction = 4)
+json length: 16001
+Action(4):
+[{"m_sPath":"CodeMirror/../MinIDE.js","m_sValue":"\nvar loadJS = function(url, rObject,rCallback){\n    var aM = url.match(/\\.([^.]+)$/);\n    let sExt = aM[1].toLowerCase();\n\n    var scriptTag;\n  \n    switch (sExt)\n    {\n    case \"js\":\n        scriptTag = document.createElement(\"script\");\n        scriptTag.type = \"text/javascript\";\n        scriptTag.src = url;\n        break;\n    case \"css\":\n        scriptTag = document.createElement(\"link\");\n        scriptTag.rel = \"stylesheet\";\n        scriptTag.type = \"text/css\";\n        scriptTag.media=\"screen\";\n        scriptTag.href = url;\n        break;\n    }\n\n    scriptTag.rObject = rObject;\n    scriptTag.rCallback = rCallback;\n\n    scriptTag.onerror = function(){alert(url + \" not found -> aboarting MinIDE :-(\")};\n    if (rCallback)\n    {\n        scriptTag.onload = function(){\n            this.rObject[rCallback]();\n        };\n    }\n\n    document.body.appendChild(scriptTag);\n};\n\nfunction File(sPath,sValue)\n{\n    this.m_sPath = sPath;\n    this.m_sValue = sValue;\n    //this.m_sValueOrg = \"\";\n    this.m_bChanged = false;\n\n    this.GetFormat = function()\n    {with(this){\n        var aM = m_sPath.match(/\\.([^.]+)$/);\n        if (aM)\n        {\n            let sExt = aM[1].toLowerCase();\n            var h = {\"js\":\"text/javascript\", \"c\":\"text/x-csrc\", \"h\":\"text/x-csrc\", \"css\":\"text/css\", \"htm\":\"text/html\", \"html\":\"text/html\", \"php\":\"application/x-httpd-php\"};\n            if (h[sExt])\n                return h[sExt];\n        }\n        return \"text/plain\";\n    }}\n\n    this.GetHtmlTab = function(iId,bActive)\n    {with(this){\n        let i = m_sPath.indexOf(\"../\");\n        let s = i < 0 ? m_sPath : m_sPath.substring(i+3);\n        let sClass = bActive ? \"MinIdeTab1\" : \"MinIdeTab0\";\n        //let i1 = m_sValue.length; let i0 = m_sValueOrg.length;\n\n        //m_bChanged = m_sValueOrg.normalize() === m_sValue.normalize();\n        let sChanged = m_bChanged ? \"* \" : \"\";\n        return '<span class=\"'+sClass+'\">'+sChanged+'<a class=\"'+sClass+'\" href=\"javascript:CallIDE('+iId+',2,\\''+m_sPath+'\\');\">'+s+'</a>&nbsp;<a class=\"'+sClass+'\" style=\"color:#ff0000\" href=\"javascript:CallIDE('+iId+',3,\\''+m_sPath+'\\');\">x</a></span> ';\n        return '<input type=\"button\" class=\"'+sClass+'\" value=\"'+s+'\" />';\n    }}\n    \n}\n\nvar g_aoMindIDE = [];\nfunction CallIDE(iID,iAction,s)\n{\n    g_aoMindIDE[iID].CallIDE(iAction,s);\n}\n\nfunction MinIDE(sContainerId)\n{\n    this.m_iId = g_aoMindIDE.length;\n    g_aoMindIDE.push(this);\n\n    this.m_sContainerId = sContainerId;\n    this.m_iWidth = 100;\n    this.m_iHeight = 100;\n\n    this.m_oEditor = null;\n\n    this.m_sMess = \"\";\n\n    this.m_hFile = {};\n    this.m_oFile = null;\n\n    this.m_bChanges = false;\n\n    this.m_aTabStack = [];\n\n    this._aLoad = [\"CodeMirror/lib/codemirror.css\",\"CodeMirror/doc/docs.css\",\"phpFileTree/styles/default/default.css\",\"MinIDE.css\"\n        ,\"CodeMirror/lib/codemirror.js\",\"CodeMirror/addon/edit/matchbrackets.js\",\"phpFileTree/php_file_tree.js\"];\n\n\n\n    this._Init = function()\n    {with(this){\n      \n        WriteHtml();\n\n        let rTextArea = document.getElementById(\"MinIDE_Editor\"+m_iId);\n\n        m_oEditor = CodeMirror.fromTextArea(rTextArea, {\n            lineNumbers: true,\n            mode: \"text/html\",\n            matchBrackets: true,\n            extraKeys: {\n                \"Ctrl-S\": function(cm) {\n                    SaveOpenFile();\n                }\n                ,\"Ctrl-W\": function(cm) {   // does not work, strg+w closes the entire window :-(\n                    CallIDE(3,m_oFile.m_sPath);\n                }\n                /*\n                , \"F11\": function(cm) {\n                    alert(cm,true); //function called for full screen mode \n                }\n                , \"Esc\": function(cm) {\n                    alert(cm,false); //function to escape full screen mode\n                }*/\n            }\n\n        });\n\n        m_oEditor.on(\"change\",function(cm,change){\n            if (m_oFile)\n            {\n                if (!m_oFile.m_bChanged)\n                {\n                    m_oFile.m_bChanged = true;\n                    _SetTabs();\n                }\n                if (!m_bChanges)\n                {\n                    _SetMenu();\n                }\n\n            }\n        });\n        SubmitAjax(1,m_iId);\n    }}\n\n    this._Load = function()\n    {with(this){\n        if (!_aLoad.length)\n            return _Init();\n\n        let sLoad = _aLoad.shift();\n        loadJS(\"MinIDE/\"+sLoad,this,\"_Load\");\n    }}\n\n    this._Load();\n\n\n    this.WriteHtml = function()\n    {with(this){\n\n        let rContainer = document.getElementById(m_sContainerId);\n        m_iWidth = parseInt(rContainer.style.width);\n        m_iHeight = parseInt(rContainer.style.height);\n\n        var s = '<style>.CodeMirror { height: auto; max-height:'+Math.round(0.95*m_iHeight)+'vh;width:'+Math.round(0.83*m_iWidth)+'vw; border: 1px solid #ddd; }.CodeMirror-scroll { max-height:'+m_iHeight+'vh; }.CodeMirror pre { padding-left: 7px; line-height: 1.25; }</style>';\n        s+= '<div id=\"ServerMess\" class=\"MinIDEServerMess\" style=\"display:none;\" onClick=\"this.style.display=\\'none\\'\">server mess</div>';\n        s += '<table class=\"MinIDE\" border=0><tr><td class=\"MinIDE_TopLeft\" style=\"height:'+Math.round(0.05*m_iHeight)+'vh\" id=\"MinIDE_TopLeft'+m_iId+'\"></td><td id=\"MinIDE_TopRight'+m_iId+'\"></td></tr>';\n        s += '<tr><td class=\"MinIDE_BottomLeft\" style=\"height:'+Math.round(0.95*m_iHeight)+'vh\" id=\"MinIDE_BottomLeft'+m_iId+'\"></td><td class=\"MinIDE_BottomRight\"style=\"visibility:hidden;vertical-align: top;\" id=\"MinIDE_BottomRight'+m_iId+'\"><textarea class=\"MinIDE_Editor\" style=\"height:100%\" id=\"MinIDE_Editor'+m_iId+'\"></textarea></td></tr></table>';\n        //alert(s);\n\n        rContainer.innerHTML = s;\n    }}\n\n    this.GetValue = function()\n    {\n        return this.m_oEditor.getValue()   \n    }\n\n    this._SetMenu = function()\n    {with(this){\n\n        var s = \"\";\n\n        bChanges = false;\n        Object.values(m_hFile).forEach(oFile => \n        {\n            if (oFile.m_bChanged)   bChanges = true;\n        });\n    \n        if (bChanges)\n            s += '<input type=\"button\" class=\"MinIdeMenu\" onClick=\"CallIDE('+m_iId+',5);\" value=\"Save All\" />';\n\n\n        let r = document.getElementById(\"MinIDE_TopLeft\"+m_iId);\n        r.innerHTML = s;\n\n    }}\n\n\n\n    this._SetTabs = function()\n    {with(this){\n\n        var s = \"\";\n\n        Object.values(m_hFile).forEach(oFile => \n        {\n            s += oFile.GetHtmlTab(m_iId,oFile == m_oFile);\n        });\n        let r = document.getElementById(\"MinIDE_TopRight\"+m_iId);\n        r.innerHTML = s;\n\n        //alert(r.parentNode.parentNode.offsetHeight);\n        //var oS = document.getElementsByClassName('CodeMirror')[0];\n    }}\n\n    this.SaveOpenFile = function()\n    {with(this){\n\n        m_oFile.m_sValue = m_oEditor.getValue();\n        let sJson = JSON.stringify([m_oFile]);\n        SubmitAjax(4,sJson);\n\n    }}\n\n    this._SetEditor = function()\n    {with(this){\n        m_oEditor.setValue(m_oFile.m_sValue);\n    }}\n\n    this._OpenFile = function(oFile,bNew)\n    {with(this){\n        if (m_oFile)\n            m_oFile.m_sValue = m_oEditor.getValue();\n\n        m_oFile = null;\n        let r = document.getElementById(\"MinIDE_BottomRight\"+m_iId);\n        if (oFile)\n        {\n            m_oEditor.setOption(\"mode\", oFile.GetFormat());\n            \n//            m_oFile = m_hFile[oFile.m_sPath] = oFile;\n//            loadJS(\"MinIDE/mode/javascript/javascript.js\",this._SetEditor);\n\n            m_oEditor.setValue(oFile.m_sValue);\n            m_oFile = m_hFile[oFile.m_sPath] = oFile;\n            //if (bNew)   m_oFile.m_sValue = m_oFile.m_sValueOrg = m_oEditor.getValue();\n\n            r.style.visibility = \"\";\n\n            m_aTabStack.push(m_oFile.m_sPath);\n        }\n        else\n        {\n            r.style.visibility = \"hidden\";\n        }\n        _SetTabs();\n    }}\n\n    this.CallIDE = function(iAction,s)\n    {with(this){\n\n        switch(iAction)\n        {\n        case 2:\n            if (m_hFile[s])\n            {\n                if (m_oFile == m_hFile[s])\n                    return;\n\n                _OpenFile(m_hFile[s]);\n                return;\n            }\n            SubmitAjax(2,s);\n            return;\n        case 3:\n            if (m_hFile[s])\n            {\n                let oFile = m_hFile[s];\n                if (oFile.m_bChanged)\n                    if (!confirm(\"skip changes ?\"))\n                        return;\n\n                let bOpen = m_oFile == oFile;\n                delete m_hFile[s];\n                if (bOpen)\n                {\n                    let sPrev = false;\n                    while (m_aTabStack.length > 0)\n                    {\n                        sPrev = m_aTabStack.pop();\n                        if (m_hFile[sPrev])\n                            break;\n                    }\n                    _OpenFile(m_hFile[sPrev]);\n                }\n                else \n                    _SetTabs();\n                _SetMenu();\n\n            }\n            return;\n        case 5: // save all\n            m_oFile.m_sValue = m_oEditor.getValue();\n\n            let aSave = [];\n            Object.values(m_hFile).forEach(oFile => \n                {\n                    if (oFile.m_bChanged)\n                        aSave.push(oFile);\n                });\n        \n\n            let sJson = JSON.stringify(aSave);\n            SubmitAjax(4,sJson);\n    \n            return;\n        }\n    }}\n    \n\n    this.ServerMess = function(sMess,bInstant)\n    {with(this){\n        if (bInstant)\n        {\n            var rDiv = document.getElementById(\"ServerMess\");\n            rDiv.innerHTML = sMess;\n            rDiv.style.display = \"\";\n            return;\n        }\n        if (m_sMess)\n            m_sMess += \"<br/>\";\n            m_sMess += sMess;\n    }}\n    \n\n    this.SubmitAjax = function(iAction,sJson,sConfirm)\n    {with(this){\n        //if (iAction ==3)   return g_iVoice++;\n    \n        if (sConfirm)\n            if (!confirm(sConfirm)) return 0;\n\n        \n\n\n        //if (m_bSubmited)\treturn 0;\n    \n        var oData = new FormData(); // m_rForm\n        //oData.append(rSID.name,rSID.value);\n        oData.append('action',iAction);\n        oData.append('json',sJson);\n    \n    \n        // Create our XMLHttpRequest object\n        var hr = new XMLHttpRequest();\n        // Create some variables we need to send to our PHP file\n        var sUrl = \"MinIDE/MinIDE.php\";\n        hr.open(\"POST\", sUrl, true);\n        // Set content type header information for sending url encoded variables in the request\n        //hr.setRequestHeader(\"Content-type\", \"application/x-www-form-urlencoded\");\n        \n        // Access the onreadystatechange event for the XMLHttpRequest object\n        hr.onreadystatechange = function() \n        {\n            switch (hr.readyState)\n            {\n            case 1:\n                //ServerMess(\"server connection established\",true);\n                break;\n            case 2: \n                //ServerMess(\"request received\",true);\n                break;\n            case 3: \n                //ServerMess(\"processing request\",true);\n                break;\n            case 4: \n                if(hr.status != 200) \n                {\n                    ServerMess(\"request finished ´but failed response.\");\n                    break;\n                }\n\n                var sJS = hr.responseText;\n                switch(iAction)\n                {\n                case 1:\n\n                    let hType = {\n                        \"php\"   :[\"htmlmixed\",\"xml\",\"javascript\",\"css\",\"clike\",\"php\"]\n                        , \"js\"  :[\"javascript\"]\n                        , \"css\" :[\"css\"]\n                        , \"htm\" :[\"xml\",\"javascript.js\",\"css\",\"vbscript.js\",\"htmlmixed\"]\n                        , \"html\" :[\"xml\",\"javascript.js\",\"css\",\"vbscript.js\",\"htmlmixed\"]\n                    };\n                    let hLoad = {};\n\n                    var re = /([^.]+)'\\);/g;\n                    var m;\n                    do {\n                        m = re.exec(sJS);\n                        if (m)  \n                            for (var i in hType[m[1]])  \n                                hLoad[hType[m[1]][i]] = 1;\n                    } while (m);\n\n                    for (var sLoad in hLoad)    loadJS(\"MinIDE/CodeMirror/mode/\"+sLoad+\"/\"+sLoad+\".js\");\n\n/*                        \n                        <script src=\"MinIDE/mode/xml/xml.js\"></script>\n                        <script src=\"MinIDE/mode/javascript/javascript.js\"></script>\n                        <script src=\"MinIDE/mode/css/css.js\"></script>\n                        <script src=\"MinIDE/mode/clike/clike.js\"></script>\n                        <script src=\"MinIDE/mode/php/php.js\"></script>\n                        <script src=\"MinIDE/mode/htmlmixed/htmlmixed.js\"></script>\n  */                                            \n                        \n\n                    let r = document.getElementById(\"MinIDE_BottomLeft\"+m_iId);\n\n                    sJS = '<div style=\"height:100%;width:'+Math.round(0.15*m_iWidth)+'vw;vertical-align:top;overflow:scroll;\">' + sJS + '</div>';\n                    r.innerHTML = sJS;\n                    init_php_file_tree();\n                    break;\n                case 2:\n                    _OpenFile(new File(sJson,sJS),true);\n                    break;\n                case 4:\n                    let oSaved = JSON.parse(sJS);\n                    for(var i in oSaved.aSaved)\n                    {\n                        let oFile = m_hFile[oSaved.aSaved[i]];\n                        if (oFile) oFile.m_bChanged = false;\n                    }\n                    let aNot = [];\n                    Object.keys(oSaved.hNot).forEach(sNot => \n                        {\n                            aNot.push(sNot);\n                        });\n                    if (aNot.length)\n                        ServerMess(\"can not save files of type\" + (aNot.length>1 ? \"s\":\"\") +\" : \" + aNot.join(\" , \"));\n                \n                    _SetTabs();\n                    _SetMenu();\n                    break;\n                default:\n                    //ServerMess(\"update: \"+ sJS.length);\n                    //eval(sJS);\n                    try {\n                        eval(sJS); \n                    } catch (e) {\n                        if (e instanceof SyntaxError) {\n                            ServerMess(e.message + \"\\nresponseText:\\n'\"+sJS+\"'\");\n                        } else {\n                            throw( e );\n                        }\n                    }\n                }\n    \n                if (m_sMess)\n                {\n                    var rDiv = document.getElementById(\"ServerMess\");\n                    rDiv.innerHTML = m_sMess;\n                    rDiv.style.display = \"\";\n                    m_sMess = \"\";\n                \n                    window.setTimeout(function () \n                    {\n                        rDiv.style.display = \"none\";\n                    }, 3000);\n                }\n            \n    \n            }\n        }\n        // Send the data to PHP now... and wait for response to update the status div\n        hr.send(oData); // Actually execute the request\n    }}\n    \n\n}","m_bChanged":true}]
 oJson
-:
-load file 'CodeMirror/../MinIDE.log'
-close log: 2021-01-18 15:21:42	duration [s]: 0.00049710273742676
+:Array
+(
+    [0] => stdClass Object
+        (
+            [m_sPath] => CodeMirror/../MinIDE.js
+            [m_sValue] => 
+var loadJS = function(url, rObject,rCallback){
+    var aM = url.match(/\.([^.]+)$/);
+    let sExt = aM[1].toLowerCase();
+
+    var scriptTag;
+  
+    switch (sExt)
+    {
+    case "js":
+        scriptTag = document.createElement("script");
+        scriptTag.type = "text/javascript";
+        scriptTag.src = url;
+        break;
+    case "css":
+        scriptTag = document.createElement("link");
+        scriptTag.rel = "stylesheet";
+        scriptTag.type = "text/css";
+        scriptTag.media="screen";
+        scriptTag.href = url;
+        break;
+    }
+
+    scriptTag.rObject = rObject;
+    scriptTag.rCallback = rCallback;
+
+    scriptTag.onerror = function(){alert(url + " not found -> aboarting MinIDE :-(")};
+    if (rCallback)
+    {
+        scriptTag.onload = function(){
+            this.rObject[rCallback]();
+        };
+    }
+
+    document.body.appendChild(scriptTag);
+};
+
+function File(sPath,sValue)
+{
+    this.m_sPath = sPath;
+    this.m_sValue = sValue;
+    //this.m_sValueOrg = "";
+    this.m_bChanged = false;
+
+    this.GetFormat = function()
+    {with(this){
+        var aM = m_sPath.match(/\.([^.]+)$/);
+        if (aM)
+        {
+            let sExt = aM[1].toLowerCase();
+            var h = {"js":"text/javascript", "c":"text/x-csrc", "h":"text/x-csrc", "css":"text/css", "htm":"text/html", "html":"text/html", "php":"application/x-httpd-php"};
+            if (h[sExt])
+                return h[sExt];
+        }
+        return "text/plain";
+    }}
+
+    this.GetHtmlTab = function(iId,bActive)
+    {with(this){
+        let i = m_sPath.indexOf("../");
+        let s = i < 0 ? m_sPath : m_sPath.substring(i+3);
+        let sClass = bActive ? "MinIdeTab1" : "MinIdeTab0";
+        //let i1 = m_sValue.length; let i0 = m_sValueOrg.length;
+
+        //m_bChanged = m_sValueOrg.normalize() === m_sValue.normalize();
+        let sChanged = m_bChanged ? "* " : "";
+        return '<span class="'+sClass+'">'+sChanged+'<a class="'+sClass+'" href="javascript:CallIDE('+iId+',2,\''+m_sPath+'\');">'+s+'</a>&nbsp;<a class="'+sClass+'" style="color:#ff0000" href="javascript:CallIDE('+iId+',3,\''+m_sPath+'\');">x</a></span> ';
+        return '<input type="button" class="'+sClass+'" value="'+s+'" />';
+    }}
+    
+}
+
+var g_aoMindIDE = [];
+function CallIDE(iID,iAction,s)
+{
+    g_aoMindIDE[iID].CallIDE(iAction,s);
+}
+
+function MinIDE(sContainerId)
+{
+    this.m_iId = g_aoMindIDE.length;
+    g_aoMindIDE.push(this);
+
+    this.m_sContainerId = sContainerId;
+    this.m_iWidth = 100;
+    this.m_iHeight = 100;
+
+    this.m_oEditor = null;
+
+    this.m_sMess = "";
+
+    this.m_hFile = {};
+    this.m_oFile = null;
+
+    this.m_bChanges = false;
+
+    this.m_aTabStack = [];
+
+    this._aLoad = ["CodeMirror/lib/codemirror.css","CodeMirror/doc/docs.css","phpFileTree/styles/default/default.css","MinIDE.css"
+        ,"CodeMirror/lib/codemirror.js","CodeMirror/addon/edit/matchbrackets.js","phpFileTree/php_file_tree.js"];
+
+
+
+    this._Init = function()
+    {with(this){
+      
+        WriteHtml();
+
+        let rTextArea = document.getElementById("MinIDE_Editor"+m_iId);
+
+        m_oEditor = CodeMirror.fromTextArea(rTextArea, {
+            lineNumbers: true,
+            mode: "text/html",
+            matchBrackets: true,
+            extraKeys: {
+                "Ctrl-S": function(cm) {
+                    SaveOpenFile();
+                }
+                ,"Ctrl-W": function(cm) {   // does not work, strg+w closes the entire window :-(
+                    CallIDE(3,m_oFile.m_sPath);
+                }
+                /*
+                , "F11": function(cm) {
+                    alert(cm,true); //function called for full screen mode 
+                }
+                , "Esc": function(cm) {
+                    alert(cm,false); //function to escape full screen mode
+                }*/
+            }
+
+        });
+
+        m_oEditor.on("change",function(cm,change){
+            if (m_oFile)
+            {
+                if (!m_oFile.m_bChanged)
+                {
+                    m_oFile.m_bChanged = true;
+                    _SetTabs();
+                }
+                if (!m_bChanges)
+                {
+                    _SetMenu();
+                }
+
+            }
+        });
+        SubmitAjax(1,m_iId);
+    }}
+
+    this._Load = function()
+    {with(this){
+        if (!_aLoad.length)
+            return _Init();
+
+        let sLoad = _aLoad.shift();
+        loadJS("MinIDE/"+sLoad,this,"_Load");
+    }}
+
+    this._Load();
+
+
+    this.WriteHtml = function()
+    {with(this){
+
+        let rContainer = document.getElementById(m_sContainerId);
+        m_iWidth = parseInt(rContainer.style.width);
+        m_iHeight = parseInt(rContainer.style.height);
+
+        var s = '<style>.CodeMirror { height: auto; max-height:'+Math.round(0.95*m_iHeight)+'vh;width:'+Math.round(0.83*m_iWidth)+'vw; border: 1px solid #ddd; }.CodeMirror-scroll { max-height:'+m_iHeight+'vh; }.CodeMirror pre { padding-left: 7px; line-height: 1.25; }</style>';
+        s+= '<div id="ServerMess" class="MinIDEServerMess" style="display:none;" onClick="this.style.display=\'none\'">server mess</div>';
+        s += '<table class="MinIDE" border=0><tr><td class="MinIDE_TopLeft" style="height:'+Math.round(0.05*m_iHeight)+'vh" id="MinIDE_TopLeft'+m_iId+'"></td><td id="MinIDE_TopRight'+m_iId+'"></td></tr>';
+        s += '<tr><td class="MinIDE_BottomLeft" style="height:'+Math.round(0.95*m_iHeight)+'vh" id="MinIDE_BottomLeft'+m_iId+'"></td><td class="MinIDE_BottomRight"style="visibility:hidden;vertical-align: top;" id="MinIDE_BottomRight'+m_iId+'"><textarea class="MinIDE_Editor" style="height:100%" id="MinIDE_Editor'+m_iId+'"></textarea></td></tr></table>';
+        //alert(s);
+
+        rContainer.innerHTML = s;
+    }}
+
+    this.GetValue = function()
+    {
+        return this.m_oEditor.getValue()   
+    }
+
+    this._SetMenu = function()
+    {with(this){
+
+        var s = "";
+
+        bChanges = false;
+        Object.values(m_hFile).forEach(oFile => 
+        {
+            if (oFile.m_bChanged)   bChanges = true;
+        });
+    
+        if (bChanges)
+            s += '<input type="button" class="MinIdeMenu" onClick="CallIDE('+m_iId+',5);" value="Save All" />';
+
+
+        let r = document.getElementById("MinIDE_TopLeft"+m_iId);
+        r.innerHTML = s;
+
+    }}
+
+
+
+    this._SetTabs = function()
+    {with(this){
+
+        var s = "";
+
+        Object.values(m_hFile).forEach(oFile => 
+        {
+            s += oFile.GetHtmlTab(m_iId,oFile == m_oFile);
+        });
+        let r = document.getElementById("MinIDE_TopRight"+m_iId);
+        r.innerHTML = s;
+
+        //alert(r.parentNode.parentNode.offsetHeight);
+        //var oS = document.getElementsByClassName('CodeMirror')[0];
+    }}
+
+    this.SaveOpenFile = function()
+    {with(this){
+
+        m_oFile.m_sValue = m_oEditor.getValue();
+        let sJson = JSON.stringify([m_oFile]);
+        SubmitAjax(4,sJson);
+
+    }}
+
+    this._SetEditor = function()
+    {with(this){
+        m_oEditor.setValue(m_oFile.m_sValue);
+    }}
+
+    this._OpenFile = function(oFile,bNew)
+    {with(this){
+        if (m_oFile)
+            m_oFile.m_sValue = m_oEditor.getValue();
+
+        m_oFile = null;
+        let r = document.getElementById("MinIDE_BottomRight"+m_iId);
+        if (oFile)
+        {
+            m_oEditor.setOption("mode", oFile.GetFormat());
+            
+//            m_oFile = m_hFile[oFile.m_sPath] = oFile;
+//            loadJS("MinIDE/mode/javascript/javascript.js",this._SetEditor);
+
+            m_oEditor.setValue(oFile.m_sValue);
+            m_oFile = m_hFile[oFile.m_sPath] = oFile;
+            //if (bNew)   m_oFile.m_sValue = m_oFile.m_sValueOrg = m_oEditor.getValue();
+
+            r.style.visibility = "";
+
+            m_aTabStack.push(m_oFile.m_sPath);
+        }
+        else
+        {
+            r.style.visibility = "hidden";
+        }
+        _SetTabs();
+    }}
+
+    this.CallIDE = function(iAction,s)
+    {with(this){
+
+        switch(iAction)
+        {
+        case 2:
+            if (m_hFile[s])
+            {
+                if (m_oFile == m_hFile[s])
+                    return;
+
+                _OpenFile(m_hFile[s]);
+                return;
+            }
+            SubmitAjax(2,s);
+            return;
+        case 3:
+            if (m_hFile[s])
+            {
+                let oFile = m_hFile[s];
+                if (oFile.m_bChanged)
+                    if (!confirm("skip changes ?"))
+                        return;
+
+                let bOpen = m_oFile == oFile;
+                delete m_hFile[s];
+                if (bOpen)
+                {
+                    let sPrev = false;
+                    while (m_aTabStack.length > 0)
+                    {
+                        sPrev = m_aTabStack.pop();
+                        if (m_hFile[sPrev])
+                            break;
+                    }
+                    _OpenFile(m_hFile[sPrev]);
+                }
+                else 
+                    _SetTabs();
+                _SetMenu();
+
+            }
+            return;
+        case 5: // save all
+            m_oFile.m_sValue = m_oEditor.getValue();
+
+            let aSave = [];
+            Object.values(m_hFile).forEach(oFile => 
+                {
+                    if (oFile.m_bChanged)
+                        aSave.push(oFile);
+                });
+        
+
+            let sJson = JSON.stringify(aSave);
+            SubmitAjax(4,sJson);
+    
+            return;
+        }
+    }}
+    
+
+    this.ServerMess = function(sMess,bInstant)
+    {with(this){
+        if (bInstant)
+        {
+            var rDiv = document.getElementById("ServerMess");
+            rDiv.innerHTML = sMess;
+            rDiv.style.display = "";
+            return;
+        }
+        if (m_sMess)
+            m_sMess += "<br/>";
+            m_sMess += sMess;
+    }}
+    
+
+    this.SubmitAjax = function(iAction,sJson,sConfirm)
+    {with(this){
+        //if (iAction ==3)   return g_iVoice++;
+    
+        if (sConfirm)
+            if (!confirm(sConfirm)) return 0;
+
+        
+
+
+        //if (m_bSubmited)	return 0;
+    
+        var oData = new FormData(); // m_rForm
+        //oData.append(rSID.name,rSID.value);
+        oData.append('action',iAction);
+        oData.append('json',sJson);
+    
+    
+        // Create our XMLHttpRequest object
+        var hr = new XMLHttpRequest();
+        // Create some variables we need to send to our PHP file
+        var sUrl = "MinIDE/MinIDE.php";
+        hr.open("POST", sUrl, true);
+        // Set content type header information for sending url encoded variables in the request
+        //hr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        
+        // Access the onreadystatechange event for the XMLHttpRequest object
+        hr.onreadystatechange = function() 
+        {
+            switch (hr.readyState)
+            {
+            case 1:
+                //ServerMess("server connection established",true);
+                break;
+            case 2: 
+                //ServerMess("request received",true);
+                break;
+            case 3: 
+                //ServerMess("processing request",true);
+                break;
+            case 4: 
+                if(hr.status != 200) 
+                {
+                    ServerMess("request finished ´but failed response.");
+                    break;
+                }
+
+                var sJS = hr.responseText;
+                switch(iAction)
+                {
+                case 1:
+
+                    let hType = {
+                        "php"   :["htmlmixed","xml","javascript","css","clike","php"]
+                        , "js"  :["javascript"]
+                        , "css" :["css"]
+                        , "htm" :["xml","javascript.js","css","vbscript.js","htmlmixed"]
+                        , "html" :["xml","javascript.js","css","vbscript.js","htmlmixed"]
+                    };
+                    let hLoad = {};
+
+                    var re = /([^.]+)'\);/g;
+                    var m;
+                    do {
+                        m = re.exec(sJS);
+                        if (m)  
+                            for (var i in hType[m[1]])  
+                                hLoad[hType[m[1]][i]] = 1;
+                    } while (m);
+
+                    for (var sLoad in hLoad)    loadJS("MinIDE/CodeMirror/mode/"+sLoad+"/"+sLoad+".js");
+
+/*                        
+                        <script src="MinIDE/mode/xml/xml.js"></script>
+                        <script src="MinIDE/mode/javascript/javascript.js"></script>
+                        <script src="MinIDE/mode/css/css.js"></script>
+                        <script src="MinIDE/mode/clike/clike.js"></script>
+                        <script src="MinIDE/mode/php/php.js"></script>
+                        <script src="MinIDE/mode/htmlmixed/htmlmixed.js"></script>
+  */                                            
+                        
+
+                    let r = document.getElementById("MinIDE_BottomLeft"+m_iId);
+
+                    sJS = '<div style="height:100%;width:'+Math.round(0.15*m_iWidth)+'vw;vertical-align:top;overflow:scroll;">' + sJS + '</div>';
+                    r.innerHTML = sJS;
+                    init_php_file_tree();
+                    break;
+                case 2:
+                    _OpenFile(new File(sJson,sJS),true);
+                    break;
+                case 4:
+                    let oSaved = JSON.parse(sJS);
+                    for(var i in oSaved.aSaved)
+                    {
+                        let oFile = m_hFile[oSaved.aSaved[i]];
+                        if (oFile) oFile.m_bChanged = false;
+                    }
+                    let aNot = [];
+                    Object.keys(oSaved.hNot).forEach(sNot => 
+                        {
+                            aNot.push(sNot);
+                        });
+                    if (aNot.length)
+                        ServerMess("can not save files of type" + (aNot.length>1 ? "s":"") +" : " + aNot.join(" , "));
+                
+                    _SetTabs();
+                    _SetMenu();
+                    break;
+                default:
+                    //ServerMess("update: "+ sJS.length);
+                    //eval(sJS);
+                    try {
+                        eval(sJS); 
+                    } catch (e) {
+                        if (e instanceof SyntaxError) {
+                            ServerMess(e.message + "\nresponseText:\n'"+sJS+"'");
+                        } else {
+                            throw( e );
+                        }
+                    }
+                }
+    
+                if (m_sMess)
+                {
+                    var rDiv = document.getElementById("ServerMess");
+                    rDiv.innerHTML = m_sMess;
+                    rDiv.style.display = "";
+                    m_sMess = "";
+                
+                    window.setTimeout(function () 
+                    {
+                        rDiv.style.display = "none";
+                    }, 3000);
+                }
+            
+    
+            }
+        }
+        // Send the data to PHP now... and wait for response to update the status div
+        hr.send(oData); // Actually execute the request
+    }}
+    
+
+}
+            [m_bChanged] => 1
+        )
+
+)
+
+checking CodeMirror/../MinIDE.js
+js in whitelist: txt , log
+close log: 2021-01-18 17:32:03	duration [s]: 0.0015149116516113
