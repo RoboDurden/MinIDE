@@ -75,12 +75,13 @@ function CallIDE(iID,iAction,s)
     g_aoMindIDE[iID].CallIDE(iAction,s);
 }
 
-function MinIDE(rContainer)
+function MinIDE(sContainerId)
 {
     this.m_iId = g_aoMindIDE.length;
     g_aoMindIDE.push(this);
 
-    this.m_rContainer = rContainer;
+    this.m_sContainerId = sContainerId;
+    this.m_iWidth = 100;
 
     this.m_oEditor = null;
 
@@ -101,8 +102,7 @@ function MinIDE(rContainer)
     this._Init = function()
     {with(this){
       
-        m_rContainer = document.getElementById(m_rContainer);
-        m_rContainer.innerHTML = GetHtml();
+        WriteHtml();
 
         let rTextArea = document.getElementById("MinIDE_Editor"+m_iId);
 
@@ -158,14 +158,20 @@ function MinIDE(rContainer)
     this._Load();
 
 
-    this.GetHtml = function()
+    this.WriteHtml = function()
     {with(this){
-        var s = '<style>.CodeMirror { height: auto; max-width:87vw; border: 1px solid #ddd; }.CodeMirror-scroll { max-height: 80vh; }.CodeMirror pre { padding-left: 7px; line-height: 1.25; }</style>';
+
+        let rContainer = document.getElementById(m_sContainerId);
+        m_iWidth = parseInt(rContainer.style.width);
+        let iHeight = parseInt(rContainer.style.height);
+
+        var s = '<style>.CodeMirror { height: auto; max-height:'+Math.round(0.95*iHeight)+'vh;width:'+Math.round(0.83*m_iWidth)+'vw; border: 1px solid #ddd; }.CodeMirror-scroll { max-height:'+iHeight+'vh; }.CodeMirror pre { padding-left: 7px; line-height: 1.25; }</style>';
         s+= '<div id="ServerMess" class="MinIDEServerMess" style="display:none;" onClick="this.style.display=\'none\'">server mess</div>';
-        s += '<table class="MinIDE" border=0><tr><td class="MinIDE_TopLeft" id="MinIDE_TopLeft'+m_iId+'"></td><td id="MinIDE_TopRight'+m_iId+'"></td></tr>';
-        s += '<tr class="MinIDE_BottomLeft"><td class="MinIDE_BottomLeft" id="MinIDE_BottomLeft'+m_iId+'"></td><td class="MinIDE_BottomRight"style="visibility:hidden;" id="MinIDE_BottomRight'+m_iId+'"><textarea class="MinIDE_Editor" id="MinIDE_Editor'+m_iId+'"></textarea></td></tr></table>';
+        s += '<table class="MinIDE" border=0><tr><td class="MinIDE_TopLeft" style="height:'+Math.round(0.05*iHeight)+'vh" id="MinIDE_TopLeft'+m_iId+'"></td><td id="MinIDE_TopRight'+m_iId+'"></td></tr>';
+        s += '<tr><td class="MinIDE_BottomLeft" style="height:'+Math.round(0.95*iHeight)+'vh" id="MinIDE_BottomLeft'+m_iId+'"></td><td class="MinIDE_BottomRight"style="visibility:hidden;vertical-align: top;" id="MinIDE_BottomRight'+m_iId+'"><textarea class="MinIDE_Editor" style="height:100%" id="MinIDE_Editor'+m_iId+'"></textarea></td></tr></table>';
         //alert(s);
-        return s;
+
+        rContainer.innerHTML = s;
     }}
 
     this.GetValue = function()
@@ -413,7 +419,7 @@ function MinIDE(rContainer)
 
                     let r = document.getElementById("MinIDE_BottomLeft"+m_iId);
 
-                    sJS = '<div style="height:100%;max-width:20vw;vertical-align:top;overflow:scroll;">' + sJS + '</div>';
+                    sJS = '<div style="height:100%;width:'+Math.round(0.15*m_iWidth)+'vw;vertical-align:top;overflow:scroll;">' + sJS + '</div>';
                     r.innerHTML = sJS;
                     init_php_file_tree();
                     break;
