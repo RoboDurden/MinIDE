@@ -6,12 +6,6 @@
 ## usage:
 
 - Simply copy the MinIDE folder into your project
-- define the root folder in MinIDE/MinIDE.php :
-```
-<?php
-
-define('C_IdeRoot',	"mode/.."); // the root folder is hard coded
-```
 - your index.htm should look like
 
 ```
