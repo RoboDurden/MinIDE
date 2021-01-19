@@ -1,17 +1,35 @@
 
+function GetScriptBase()
+{
+    var aScript = document.getElementsByTagName('script');
+    let iPos;
+    for (var i in aScript)
+        if (aScript[i].src)
+            if (0 < (iPos = aScript[i].src.indexOf("MinIDE.js")))
+                return aScript[i].src.substring(0,iPos);
+
+    return false;
+}
+
+
 var loadJS = function(url, rObject,rCallback){
     var aM = url.match(/\.([^.]+)$/);
     let sExt = aM[1].toLowerCase();
 
     var scriptTag;
+    url = GetScriptBase() + url;
     switch (sExt)
     {
     case "js":
+
+
         scriptTag = document.createElement("script");
         scriptTag.type = "text/javascript";
         scriptTag.src = url;
         break;
     case "css":
+
+
         scriptTag = document.createElement("link");
         scriptTag.rel = "stylesheet";
         scriptTag.type = "text/css";
@@ -19,6 +37,8 @@ var loadJS = function(url, rObject,rCallback){
         scriptTag.href = url;
         break;
     }
+
+
 
     scriptTag.rObject = rObject;
     scriptTag.rCallback = rCallback;
@@ -153,7 +173,7 @@ function MinIDE(sContainerId)
             return _Init();
 
         let sLoad = _aLoad.shift();
-        loadJS("MinIDE/"+sLoad,this,"_Load");
+        loadJS(sLoad,this,"_Load");
     }}
 
     this._Load();
@@ -267,7 +287,7 @@ function MinIDE(sContainerId)
             m_oEditor.setOption("mode", oFile.GetFormat());
             
 //            m_oFile = m_hFile[oFile.m_sPath] = oFile;
-//            loadJS("MinIDE/mode/javascript/javascript.js",this._SetEditor);
+//            loadJS("mode/javascript/javascript.js",this._SetEditor);
 
             m_oEditor.setValue(oFile.m_sValue);
             m_oFile = m_hFile[oFile.m_sPath] = oFile;
@@ -381,7 +401,7 @@ function MinIDE(sContainerId)
         var hr = new XMLHttpRequest();
         // Create some variables we need to send to our PHP file
         if (!sUrl) 
-            sUrl = "MinIDE/MinIDE.php";
+            sUrl = GetScriptBase() + "MinIDE.php";
 
         hr.open("POST", sUrl, true);
         // Set content type header information for sending url encoded variables in the request
@@ -431,7 +451,7 @@ function MinIDE(sContainerId)
                                 hLoad[hType[m[1]][i]] = 1;
                     } while (m);
 
-                    for (var sLoad in hLoad)    loadJS("MinIDE/CodeMirror/mode/"+sLoad+"/"+sLoad+".js");
+                    for (var sLoad in hLoad)    loadJS("CodeMirror/mode/"+sLoad+"/"+sLoad+".js");
 
 /*                        
                         <script src="MinIDE/mode/xml/xml.js"></script>

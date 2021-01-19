@@ -10,6 +10,15 @@
   <script src="MinIDE/MinIDE.js"></script>
   <script>
     var oIDE = new MinIDE("IDE");
+
+    function Info(s)
+{
+	var r = document.getElementById("Info");
+  r.innerHTML = s.replace(/\n/g,"<br/>").replace(/\t/g,"<span class=tab> </span>");
+	r.style.display = s == "" ? "none" : "";
+}
+
+
   </script>
 
   <a href="javascript:alert(oIDE.GetValue());">Compile</a>

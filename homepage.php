@@ -1,4 +1,4 @@
-<center>this is the homepage set in config.php :-) 
+<center>this is homepage.php set in MinIDE/config.php :-) 
 <h1>MinIDE, a minimal IDE based on CodeMirror</h1>
 </center>
 <h2>demo: <a href="https://www.robosoft.de/MinIDE/test.htm" rel="nofollow">https://www.robosoft.de/MinIDE/test.htm</a></h2>
@@ -10,12 +10,8 @@
 
 <pre>
 <code>&lt;html&gt;
-&lt;head&gt;
-  &lt;title&gt;MinIDE - the minimal IDE :-)&lt;/title&gt;
-  &lt;meta charset="utf-8"/&gt;
- &lt;/head&gt;
 &lt;body&gt;
-  &lt;div id="IDE" style="width:90vw;height:80vh;border:1px solid grey;"&gt;&lt;/div&gt;
+  &lt;div id="IDE" style="width:90vw;height:80vh;"&gt;&lt;/div&gt;
 
   &lt;script src="MinIDE/MinIDE.js"&gt;&lt;/script&gt;
   &lt;script&gt;

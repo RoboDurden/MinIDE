@@ -3,7 +3,7 @@
 "pPasswordNew1":"",
 "pPasswordNew2":"",
 "sBlacklist":"",
-"sHomepage":"homepage.php",
+"sHomepage":"..\/hover.php",
 "sRoot":"CodeMirror\/..",
 "sWhitelist":"",
 "sWhitelistSave":"txt,log"}
