@@ -167,9 +167,10 @@ function MinIDE(sContainerId)
         m_iHeight = parseInt(rContainer.style.height);
 
         var s = '<style>.CodeMirror { height: auto; max-height:'+Math.round(0.95*m_iHeight)+'vh;width:'+Math.round(0.83*m_iWidth)+'vw; border: 1px solid #ddd; }.CodeMirror-scroll { max-height:'+m_iHeight+'vh; }.CodeMirror pre { padding-left: 7px; line-height: 1.25; }</style>';
-        s+= '<div id="ServerMess" class="MinIDEServerMess" style="display:none;" onClick="this.style.display=\'none\'">server mess</div>';
-        s += '<table class="MinIDE" border=0><tr><td class="MinIDE_TopLeft" style="height:'+Math.round(0.05*m_iHeight)+'vh" id="MinIDE_TopLeft'+m_iId+'"></td><td id="MinIDE_TopRight'+m_iId+'"></td></tr>';
-        s += '<tr><td class="MinIDE_BottomLeft" style="height:'+Math.round(0.95*m_iHeight)+'vh" id="MinIDE_BottomLeft'+m_iId+'"></td><td class="MinIDE_BottomRight"style="visibility:hidden;vertical-align: top;" id="MinIDE_BottomRight'+m_iId+'"><textarea class="MinIDE_Editor" style="height:100%" id="MinIDE_Editor'+m_iId+'"></textarea></td></tr></table>';
+        s+= '<div id="ServerMess" class="MinIDEServerMess" style="display:none;" onClick="this.style.display=\'none\'">server mess</div>'
+        + '<table class="MinIDE" style="width:100%;height:100%;" border=0><tr><td class="MinIDE_TopLeft" style="height:'+Math.round(0.05*m_iHeight)+'vh" id="MinIDE_TopLeft'+m_iId+'"></td><td id="MinIDE_TopRight'+m_iId+'"></td></tr>'
+        + '<tr><td class="MinIDE_BottomLeft" style="height:'+Math.round(0.95*m_iHeight)+'vh" id="MinIDE_BottomLeft'+m_iId+'"></td><td class="MinIDE_BottomRight"style="vertical-align:top;" id="MinIDE_BottomRight'+m_iId+'">'
+        + '<div class="MinIDE_Home" style="height:100%;overflow:scroll;display:;" id="MinIDE_Home'+m_iId+'"></div><div class="MinIDE_DivEditor" style="position:relative;height:100%;display:none;" id="MinIDE_DivEditor'+m_iId+'"><textarea class="MinIDE_Editor" style="height:100%" id="MinIDE_Editor'+m_iId+'"></textarea></div></td></tr></table>';
         //alert(s);
 
         rContainer.innerHTML = s;
@@ -179,6 +180,27 @@ function MinIDE(sContainerId)
     {
         return this.m_oEditor.getValue()   
     }
+
+    this._ShowHomepage = function(bShow,sHtml)
+    {with(this){
+
+        let r = document.getElementById("MinIDE_Home"+m_iId);
+        if (sHtml)
+            r.innerHTML = sHtml;
+
+        let rDivEditor = r.nextSibling;
+        if (bShow)
+        {
+            r.style.display = "";
+            rDivEditor.style.display = "none";
+        }
+        else
+        {
+            r.style.display = "none";
+            rDivEditor.style.display = "";
+        }
+
+    }}
 
     this._SetMenu = function()
     {with(this){
@@ -241,6 +263,7 @@ function MinIDE(sContainerId)
         let r = document.getElementById("MinIDE_BottomRight"+m_iId);
         if (oFile)
         {
+            _ShowHomepage(false);
             m_oEditor.setOption("mode", oFile.GetFormat());
             
 //            m_oFile = m_hFile[oFile.m_sPath] = oFile;
@@ -250,13 +273,14 @@ function MinIDE(sContainerId)
             m_oFile = m_hFile[oFile.m_sPath] = oFile;
             //if (bNew)   m_oFile.m_sValue = m_oFile.m_sValueOrg = m_oEditor.getValue();
 
-            r.style.visibility = "";
+            //3r.style.visibility = "";
 
             m_aTabStack.push(m_oFile.m_sPath);
         }
         else
         {
-            r.style.visibility = "hidden";
+            _ShowHomepage(true);
+            //r.style.visibility = "hidden";
         }
         _SetTabs();
     }}
@@ -338,13 +362,10 @@ function MinIDE(sContainerId)
     }}
     
 
-    this.SubmitAjax = function(iAction,sJson,sConfirm)
+    this.SubmitAjax = function(iAction,sJson,sUrl)
     {with(this){
         //if (iAction ==3)   return g_iVoice++;
     
-        if (sConfirm)
-            if (!confirm(sConfirm)) return 0;
-
         
 
 
@@ -359,7 +380,9 @@ function MinIDE(sContainerId)
         // Create our XMLHttpRequest object
         var hr = new XMLHttpRequest();
         // Create some variables we need to send to our PHP file
-        var sUrl = "MinIDE/MinIDE.php";
+        if (!sUrl) 
+            sUrl = "MinIDE/MinIDE.php";
+
         hr.open("POST", sUrl, true);
         // Set content type header information for sending url encoded variables in the request
         //hr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -381,7 +404,7 @@ function MinIDE(sContainerId)
             case 4: 
                 if(hr.status != 200) 
                 {
-                    ServerMess("request finished ´but failed response.");
+                    ServerMess("Server Error "+ hr.status + ": " + sUrl);
                     break;
                 }
 
@@ -389,7 +412,7 @@ function MinIDE(sContainerId)
                 switch(iAction)
                 {
                 case 1:
-
+                    let oRet = JSON.parse(sJS);
                     let hType = {
                         "php"   :["htmlmixed","xml","javascript","css","clike","php"]
                         , "js"  :["javascript"]
@@ -402,7 +425,7 @@ function MinIDE(sContainerId)
                     var re = /([^.]+)'\);/g;
                     var m;
                     do {
-                        m = re.exec(sJS);
+                        m = re.exec(oRet.sTree);
                         if (m)  
                             for (var i in hType[m[1]])  
                                 hLoad[hType[m[1]][i]] = 1;
@@ -422,9 +445,11 @@ function MinIDE(sContainerId)
 
                     let r = document.getElementById("MinIDE_BottomLeft"+m_iId);
 
-                    sJS = '<div style="height:100%;width:'+Math.round(0.15*m_iWidth)+'vw;vertical-align:top;overflow:scroll;">' + sJS + '</div>';
-                    r.innerHTML = sJS;
+                    sTree = '<div style="height:100%;width:'+Math.round(0.15*m_iWidth)+'vw;vertical-align:top;overflow:scroll;">' + oRet.sTree + '</div>';
+                    r.innerHTML = sTree;
                     init_php_file_tree();
+
+                    SubmitAjax(6,"",oRet.sHomeUrl);
                     break;
                 case 2:
                     _OpenFile(new File(sJson,sJS),true);
@@ -447,6 +472,11 @@ function MinIDE(sContainerId)
                     _SetTabs();
                     _SetMenu();
                     break;
+                case 6: // home page
+                {
+                    _ShowHomepage(true,sJS);
+                    break;
+                }
                 default:
                     //ServerMess("update: "+ sJS.length);
                     //eval(sJS);
@@ -461,21 +491,20 @@ function MinIDE(sContainerId)
                     }
                 }
     
-                if (m_sMess)
-                {
-                    var rDiv = document.getElementById("ServerMess");
-                    rDiv.innerHTML = m_sMess;
-                    rDiv.style.display = "";
-                    m_sMess = "";
-                
-                    window.setTimeout(function () 
-                    {
-                        rDiv.style.display = "none";
-                    }, 3000);
-                }
-            
-    
             }
+            if (m_sMess)
+            {
+                var rDiv = document.getElementById("ServerMess");
+                rDiv.innerHTML = m_sMess;
+                rDiv.style.display = "";
+                m_sMess = "";
+            
+                window.setTimeout(function () 
+                {
+                    rDiv.style.display = "none";
+                }, 3000);
+            }
+
         }
         // Send the data to PHP now... and wait for response to update the status div
         hr.send(oData); // Actually execute the request

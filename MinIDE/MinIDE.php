@@ -42,10 +42,14 @@ function Action($iAction,$sJson)
         case 1: // load tree
             $iId = $sJson;
             require("phpFileTree/php_file_tree.php");
-            $sHtml = php_file_tree($oConfig->sRoot, "javascript:CallIDE($iId,2,'[link]');");
-            x("load tree:\n$sHtml");
-            echo $sHtml;
-        return;
+
+            $oRet = (object) array('sTree' => ''    , 'sHomeUrl' => '');
+
+            $oRet->sTree = php_file_tree($oConfig->sRoot, "javascript:CallIDE($iId,2,'[link]');");
+            x("load tree:\n$oRet->sTree");
+            $oRet->sHomeUrl = $oConfig->sHomepage;
+            echo json_encode($oRet);
+            return;
     case 2: // load file
         if (Load($sJson,$s))
             echo $s;
