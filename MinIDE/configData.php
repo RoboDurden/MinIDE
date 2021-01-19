@@ -4,7 +4,7 @@
 "pPasswordNew2":"",
 "sBlacklist":"",
 "sHomepage":"..\/hover.php",
-"sRoot":"CodeMirror\/..",
+"sRoot":"..\/..\/source\/emanuelferu_hoverboard-firmware-hack-foc",
 "sWhitelist":"",
 "sWhitelistSave":"txt,log"}
 */?>
