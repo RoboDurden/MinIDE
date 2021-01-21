@@ -2,9 +2,10 @@
 {"pPassword":"",
 "pPasswordNew1":"",
 "pPasswordNew2":"",
-"sBlacklist":"",
-"sHomepage":"..\/hover.php",
-"sRoot":"..\/..\/source\/emanuelferu_hoverboard-firmware-hack-foc",
-"sWhitelist":"",
-"sWhitelistSave":"txt,log"}
+"sBlacklist":"ini",
+"sHomepage":"compile.php",
+"sRootOrg":"",
+"sRootSave":"",
+"sWhitelist":"c,h",
+"sWhitelistSave":""}
 */?>

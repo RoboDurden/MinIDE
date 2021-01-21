@@ -52,9 +52,9 @@ $hConfig = array(
 
 define('CONFIG_PATH','configData.php');
 
-function LoadConfig()
+function LoadConfig($sPath=false)
 {
-	$hConfig = array( "sRoot" => "mode/.."
+	$hConfig = $sPath ? array() : array( "sRoot" => "mode/.."
 	, "sBlacklist" => ""
 	, "sWhitelist" => ""
 	, "sWhitelistSave" => "htm,js,css,txt"
@@ -63,7 +63,7 @@ function LoadConfig()
 	, "pPasswordNew2" => ""
 	);
 	
-	if (Load(CONFIG_PATH,$sJson))
+	if (Load($sPath ? $sPath : CONFIG_PATH,$sJson))
 	{
 		$sJson = substr($sJson,8,-5);
 		x("LoadConfig()");	// : $sJson
@@ -71,15 +71,14 @@ function LoadConfig()
 		if ($hConfig === null) 
 			die ("could not parse ".CONFIG_PATH);
 	}
-	return $hConfig;
+	return (object)$hConfig;
 }
 
-function  SaveConfig()
+function  SaveConfig($hConfig,$sPath=false)
 {
-	global $hConfig;
     $sJson = str_replace('","',"\",\n\"",json_encode($hConfig));
 	//x("saving config to ".CONFIG_PATH.": $sJson");
-	if (Save(CONFIG_PATH,"<?php/*\n$sJson\n*/?>"))
+	if (Save($sPath ? $sPath : CONFIG_PATH,"<?php/*\n$sJson\n*/?>"))
 		return true;
 	return false;
 	
@@ -378,6 +377,31 @@ function CheckFolders($aFolder)
 	foreach($aFolder AS $sFolder)
 		if (!is_dir($sFolder))
 		  mkdir($sFolder);
+}
+
+function GetDirR($source,$sBaseRemove="",$sBaseAdd=""){
+	$a = array();
+    if(is_dir($source)) {
+        $dir_handle=opendir($source);
+		while($file=readdir($dir_handle))
+		{
+			if($file!="." && $file!="..")
+			{
+				if(is_dir($source."/".$file))
+				{
+					$a = array_merge($a, GetDirR($source."/".$file,$sBaseRemove,$sBaseAdd));
+				} 
+				else 
+				{
+					$a[] = $sBaseAdd.substr($source."/".$file,strlen($sBaseRemove)+1);
+                }
+            }
+        }
+        closedir($dir_handle);
+    } else {
+		$a[] = $sBaseAdd.substr($source,strlen($sBaseRemove)+1);
+	}
+	return $a;
 }
 
 ?>

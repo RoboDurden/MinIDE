@@ -1,65 +1,21 @@
 
-function GetScriptBase()
-{
-    var aScript = document.getElementsByTagName('script');
-    let iPos;
-    for (var i in aScript)
-        if (aScript[i].src)
-            if (0 < (iPos = aScript[i].src.indexOf("MinIDE.js")))
-                return aScript[i].src.substring(0,iPos);
 
-    return false;
-}
-
-
-var loadJS = function(url, rObject,rCallback){
-    var aM = url.match(/\.([^.]+)$/);
-    let sExt = aM[1].toLowerCase();
-
-    var scriptTag;
-    url = GetScriptBase() + url;
-    switch (sExt)
-    {
-    case "js":
-
-
-        scriptTag = document.createElement("script");
-        scriptTag.type = "text/javascript";
-        scriptTag.src = url;
-        break;
-    case "css":
-
-
-        scriptTag = document.createElement("link");
-        scriptTag.rel = "stylesheet";
-        scriptTag.type = "text/css";
-        scriptTag.media="screen";
-        scriptTag.href = url;
-        break;
-    }
-
-
-
-    scriptTag.rObject = rObject;
-    scriptTag.rCallback = rCallback;
-
-    scriptTag.onerror = function(){alert(url + " not found -> aboarting MinIDE :-(")};
-    if (rCallback)
-    {
-        scriptTag.onload = function(){
-            this.rObject[rCallback]();
-        };
-    }
-
-    document.body.appendChild(scriptTag);
-};
-
-function File(sPath,sValue)
+function File(sPath,sValue,bOrg,bEditable)
 {
     this.m_sPath = sPath;
     this.m_sValue = sValue;
+    this.m_bOrg = bOrg; // no modified file yet saved to config.sRootSave
+    this.m_bEditable = bEditable;
+    this.m_rContainer = null;
+
     //this.m_sValueOrg = "";
     this.m_bChanged = false;
+
+    this.SetState = function(bChanged,bOrg)
+    {with(this){
+        m_bChanged = bChanged;
+        m_bOrg = bOrg;
+    }}
 
     this.GetFormat = function()
     {with(this){
@@ -74,7 +30,7 @@ function File(sPath,sValue)
         return "text/plain";
     }}
 
-    this.GetHtmlTab = function(iId,bActive)
+    this.GetHtmlTab = function(rIde,bActive)
     {with(this){
         let i = m_sPath.indexOf("../");
         let s = i < 0 ? m_sPath : m_sPath.substring(i+3);
@@ -83,7 +39,20 @@ function File(sPath,sValue)
 
         //m_bChanged = m_sValueOrg.normalize() === m_sValue.normalize();
         let sChanged = m_bChanged ? "* " : "";
-        return '<span class="'+sClass+'">'+sChanged+'<a class="'+sClass+'" href="javascript:CallIDE('+iId+',2,\''+m_sPath+'\');">'+s+'</a>&nbsp;<a class="'+sClass+'" style="color:#ff0000" href="javascript:CallIDE('+iId+',3,\''+m_sPath+'\');">x</a></span> ';
+        let iId = rIde.m_iId;
+        let sLabel = m_sPath;
+        if (rIde.m_sRootOrg)
+        {
+            let iPos = m_sPath.indexOf(rIde.m_sRootOrg);
+            if (iPos >= 0 )
+            {
+                sLabel = m_sPath.substring(iPos+rIde.m_sRootOrg.length+1);
+            }
+        }
+        let sHtml = '<span class="'+sClass+'">'+sChanged+'<a class="'+sClass+'" href="javascript:CallIDE('+iId+',2,\''+m_sPath+'\');">'+sLabel+'</a>';
+        if (this.m_bEditable)
+            sHtml += '&nbsp;<a class="'+sClass+'" style="color:#ff0000" href="javascript:CallIDE('+iId+',3,\''+m_sPath+'\');">x</a>';
+        return sHtml + "</span> ";
         return '<input type="button" class="'+sClass+'" value="'+s+'" />';
     }}
     
@@ -117,6 +86,9 @@ function MinIDE(sContainerId)
 
     this._aLoad = ["CodeMirror/lib/codemirror.css","CodeMirror/doc/docs.css","phpFileTree/styles/default/default.css","MinIDE.css"
         ,"CodeMirror/lib/codemirror.js","CodeMirror/addon/edit/matchbrackets.js","phpFileTree/php_file_tree.js"];
+
+    this.m_sConfigPath = "";
+    this.m_sRootOrg = "";
 
 
 
@@ -164,8 +136,16 @@ function MinIDE(sContainerId)
 
             }
         });
-        SubmitAjax(1,m_iId);
+        SubmitAjax(1,JSON.stringify({"iId":m_iId, "sPathConfig":null}));
     }}
+
+    this.LoadTree = function(sPathConfig)
+    {with(this){
+        m_sConfigPath = sPathConfig;
+        SubmitAjax(1,JSON.stringify({"iId":m_iId}));
+        //SubmitAjax(1,JSON.stringify({"iId":m_iId, "sPathConfig":sPathConfig}));
+    }}
+
 
     this._Load = function()
     {with(this){
@@ -190,7 +170,7 @@ function MinIDE(sContainerId)
         s+= '<div id="ServerMess" class="MinIDEServerMess" style="display:none;" onClick="this.style.display=\'none\'">server mess</div>'
         + '<table class="MinIDE" style="width:100%;height:100%;" border=0><tr><td class="MinIDE_TopLeft" style="height:'+Math.round(0.05*m_iHeight)+'vh" id="MinIDE_TopLeft'+m_iId+'"></td><td id="MinIDE_TopRight'+m_iId+'"></td></tr>'
         + '<tr><td class="MinIDE_BottomLeft" style="height:'+Math.round(0.95*m_iHeight)+'vh" id="MinIDE_BottomLeft'+m_iId+'"></td><td class="MinIDE_BottomRight"style="vertical-align:top;" id="MinIDE_BottomRight'+m_iId+'">'
-        + '<div class="MinIDE_Home" style="height:100%;overflow:scroll;display:;" id="MinIDE_Home'+m_iId+'"></div><div class="MinIDE_DivEditor" style="position:relative;height:100%;display:none;" id="MinIDE_DivEditor'+m_iId+'"><textarea class="MinIDE_Editor" style="height:100%" id="MinIDE_Editor'+m_iId+'"></textarea></div></td></tr></table>';
+        + '<div class="MinIDE_DivEditor" style="position:relative;height:100%;display:none;" id="MinIDE_DivEditor'+m_iId+'"><textarea class="MinIDE_Editor" style="height:100%" id="MinIDE_Editor'+m_iId+'"></textarea></div></td></tr></table>';
         //alert(s);
 
         rContainer.innerHTML = s;
@@ -249,12 +229,14 @@ function MinIDE(sContainerId)
 
         var s = "";
 
+        let i=0;
         Object.values(m_hFile).forEach(oFile => 
         {
-            s += oFile.GetHtmlTab(m_iId,oFile == m_oFile);
+            s += oFile.GetHtmlTab(this,oFile == m_oFile);
+            i++;
         });
         let r = document.getElementById("MinIDE_TopRight"+m_iId);
-        r.innerHTML = s;
+        r.innerHTML =  i>1 ? s : "";
 
         //alert(r.parentNode.parentNode.offsetHeight);
         //var oS = document.getElementsByClassName('CodeMirror')[0];
@@ -276,33 +258,82 @@ function MinIDE(sContainerId)
 
     this._OpenFile = function(oFile,bNew)
     {with(this){
-        if (m_oFile)
-            m_oFile.m_sValue = m_oEditor.getValue();
+        if (m_oFile) 
+        {
+            if (this.m_oFile.m_bEditable)
+                m_oFile.m_sValue = m_oEditor.getValue();
 
-        m_oFile = null;
-        let r = document.getElementById("MinIDE_BottomRight"+m_iId);
+            if (m_oFile.m_rContainer)
+                m_oFile.m_rContainer.style.display = "none";
+            m_oFile = null;
+        }
+
+        //let r = document.getElementById("MinIDE_BottomRight"+m_iId);
+        // '<div class="MinIDE_Home" style="height:100%;overflow:scroll;display:;" id="MinIDE_Home'+m_iId+'"></div>
+        //let rHome = document.getElementById("MinIDE_Home"+m_iId);
+        let rDivEditor = document.getElementById("MinIDE_DivEditor"+m_iId);
+        
         if (oFile)
         {
-            _ShowHomepage(false);
-            m_oEditor.setOption("mode", oFile.GetFormat());
-            
-//            m_oFile = m_hFile[oFile.m_sPath] = oFile;
-//            loadJS("mode/javascript/javascript.js",this._SetEditor);
+            //_ShowHomepage(false);
+            if (oFile.m_bEditable)
+            {
+                rDivEditor.style.display = "";
+                m_oEditor.setOption("mode", oFile.GetFormat());
+                
+    //            m_oFile = m_hFile[oFile.m_sPath] = oFile;
+    //            loadJS("mode/javascript/javascript.js",this._SetEditor);
 
-            m_oEditor.setValue(oFile.m_sValue);
+                m_oEditor.setValue(oFile.m_sValue);
+                //if (bNew)   m_oFile.m_sValue = m_oFile.m_sValueOrg = m_oEditor.getValue();
+
+            }
+            else
+            {
+                rDivEditor.style.display = "none";
+                if (!oFile.m_rContainer)  // first time displayed
+                {
+                    let r = document.createElement("div");
+                    r.style.height = "100%";
+                    r.style.overflow = "scroll"
+                    r.style.display = "none";
+                    r.innerHTML = oFile.m_sValue;
+
+                    rDivEditor.parentNode.insertBefore(r,rDivEditor);
+                    oFile.m_rContainer = r;
+                }
+                oFile.m_rContainer.style.display = "";
+                //rDivEditor.style.display = "none";
+            }
             m_oFile = m_hFile[oFile.m_sPath] = oFile;
-            //if (bNew)   m_oFile.m_sValue = m_oFile.m_sValueOrg = m_oEditor.getValue();
-
-            //3r.style.visibility = "";
-
             m_aTabStack.push(m_oFile.m_sPath);
         }
         else
         {
-            _ShowHomepage(true);
+            for (var sPath in m_hFile)
+                if (!m_hFile[sPath].m_bEditable)
+                {
+                    _OpenFile(sPath);
+                    break;
+                }
+
+
+            //_ShowHomepage(true);
             //r.style.visibility = "hidden";
         }
         _SetTabs();
+    }}
+
+    this.CloseEditable = function()
+    {with(this){
+        let bNoOpen = true;
+        for (var sPath in m_hFile)
+            if (m_hFile[sPath].m_bEditable)
+            {
+                bNoOpen = false;
+                CallIDE(3,sPath);
+            }
+        return bNoOpen;
     }}
 
     this.CallIDE = function(iAction,s)
@@ -328,10 +359,13 @@ function MinIDE(sContainerId)
                 if (oFile.m_bChanged)
                     if (!confirm("skip changes ?"))
                         return;
+    
 
                 let bOpen = m_oFile == oFile;
-                delete m_hFile[s];
-                if (bOpen)
+                if (oFile.m_bEditable)
+                    delete m_hFile[s];
+                
+                    if (bOpen)
                 {
                     let sPrev = false;
                     while (m_aTabStack.length > 0)
@@ -344,28 +378,56 @@ function MinIDE(sContainerId)
                 }
                 else 
                     _SetTabs();
+
                 _SetMenu();
 
+                if (!oFile.m_bOrg)  if (confirm("also delete your server saved changes ?"))
+                {
+                    SubmitAjax(7,s);
+                }
             }
             return;
         case 5: // save all
-            m_oFile.m_sValue = m_oEditor.getValue();
-
-            let aSave = [];
-            Object.values(m_hFile).forEach(oFile => 
-                {
-                    if (oFile.m_bChanged)
-                        aSave.push(oFile);
-                });
-        
-
-            let sJson = JSON.stringify(aSave);
-            SubmitAjax(4,sJson);
-    
+            SaveAll();
             return;
         }
     }}
     
+    this.SaveAll = function(rCallback,rCallbackObject)
+    {with(this){
+        if (m_oFile.m_bEditable)
+            m_oFile.m_sValue = m_oEditor.getValue();
+
+        let aSave = [];
+        Object.values(m_hFile).forEach(oFile => 
+            {
+                if (oFile.m_bChanged)
+                    aSave.push(oFile);
+            });
+        if (!aSave.length)
+            return true;
+
+        SubmitAjax(4,JSON.stringify(aSave),false,false,rCallback,rCallbackObject);
+        return false;
+    }}
+
+    this.Mess = function(s,iSeconds)
+    {
+        var rDiv = document.getElementById("ServerMess");
+        rDiv.innerHTML = s + " <span id='TimerMess'></span>";
+        rDiv.style.display = "";
+    
+        var hInterval = window.setInterval(function () 
+        {
+            var r = document.getElementById("TimerMess");
+            r.innerHTML = iSeconds--;
+            if (iSeconds<0)
+            {
+                rDiv.style.display = "none";
+                window.clearInterval(hInterval);
+            }
+        }, 1000);
+    }
 
     this.ServerMess = function(sMess,bInstant)
     {with(this){
@@ -380,26 +442,67 @@ function MinIDE(sContainerId)
             m_sMess += "<br/>";
             m_sMess += sMess;
     }}
-    
 
-    this.SubmitAjax = function(iAction,sJson,sUrl)
+    this._InitTree = function(oData)
     {with(this){
-        //if (iAction ==3)   return g_iVoice++;
-    
-        
+        if (oData.sTree)  // first call
+        {
+            let hType = {
+                "php"   :["htmlmixed","xml","javascript","css","clike","php"]
+                , "js"  :["javascript"]
+                , "css" :["css"]
+                , "htm" :["xml","javascript.js","css","vbscript.js","htmlmixed"]
+                , "html" :["xml","javascript.js","css","vbscript.js","htmlmixed"]
+                , "cpp"  :["clike"]
+                , "c"  :["clike"]
+                , "h"  :["clike"]
+            };
+            oData.aLoad = [];
+
+            var re = /([^.]+)'\);/g;
+            var m;
+            do {
+                m = re.exec(sTree);
+                if (m)  
+                    for (var i in hType[m[1]])  
+                        if (!oData.aLoad.includes(hType[m[1]][i]))
+                            oData.aLoad.push(hType[m[1]][i]);
+                        //hLoad[hType[m[1]][i]] = 1;
+            } while (m);
+            oData.sTree = false;
+        }
+
+        if (oData.aLoad.length)
+        {
+            let sLoad = oData.aLoad.pop();
+            loadJS("CodeMirror/mode/"+sLoad+"/"+sLoad+".js",this,"_InitTree",oData);
+        }
+        else
+        {
+            if (oData.aOpen)
+            {
+                for(i in oData.aOpen)
+                    SubmitAjax(2,oData.aOpen[i]);
+            }
+        }
+
+    }}
 
 
-        //if (m_bSubmited)	return 0;
-    
+    this.SubmitAjax = function(iAction,sJson,sUrl,bNoJson,rCallback,rCallbackObject)
+    {with(this){
         var oData = new FormData(); // m_rForm
         //oData.append(rSID.name,rSID.value);
         oData.append('action',iAction);
         oData.append('json',sJson);
+        if (m_sConfigPath)
+            oData.append('config',m_sConfigPath);
     
     
         // Create our XMLHttpRequest object
         var hr = new XMLHttpRequest();
         // Create some variables we need to send to our PHP file
+        let bExternalCall = sUrl;
         if (!sUrl) 
             sUrl = GetScriptBase() + "MinIDE.php";
 
@@ -428,101 +531,143 @@ function MinIDE(sContainerId)
                     break;
                 }
 
-                var sJS = hr.responseText;
-                switch(iAction)
+                var sRet = hr.responseText;
+                let oRet;
+                if (!bNoJson)
                 {
-                case 1:
-                    let oRet = JSON.parse(sJS);
-                    let hType = {
-                        "php"   :["htmlmixed","xml","javascript","css","clike","php"]
-                        , "js"  :["javascript"]
-                        , "css" :["css"]
-                        , "htm" :["xml","javascript.js","css","vbscript.js","htmlmixed"]
-                        , "html" :["xml","javascript.js","css","vbscript.js","htmlmixed"]
-                    };
-                    let hLoad = {};
-
-                    var re = /([^.]+)'\);/g;
-                    var m;
-                    do {
-                        m = re.exec(oRet.sTree);
-                        if (m)  
-                            for (var i in hType[m[1]])  
-                                hLoad[hType[m[1]][i]] = 1;
-                    } while (m);
-
-                    for (var sLoad in hLoad)    loadJS("CodeMirror/mode/"+sLoad+"/"+sLoad+".js");
-
-/*                        
-                        <script src="MinIDE/mode/xml/xml.js"></script>
-                        <script src="MinIDE/mode/javascript/javascript.js"></script>
-                        <script src="MinIDE/mode/css/css.js"></script>
-                        <script src="MinIDE/mode/clike/clike.js"></script>
-                        <script src="MinIDE/mode/php/php.js"></script>
-                        <script src="MinIDE/mode/htmlmixed/htmlmixed.js"></script>
-  */                                            
-                        
-
-                    let r = document.getElementById("MinIDE_BottomLeft"+m_iId);
-
-                    sTree = '<div style="height:100%;width:'+Math.round(0.15*m_iWidth)+'vw;vertical-align:top;overflow:scroll;">' + oRet.sTree + '</div>';
-                    r.innerHTML = sTree;
-                    init_php_file_tree();
-
-                    SubmitAjax(6,"",oRet.sHomeUrl);
-                    break;
-                case 2:
-                    _OpenFile(new File(sJson,sJS),true);
-                    break;
-                case 4:
-                    let oSaved = JSON.parse(sJS);
-                    for(var i in oSaved.aSaved)
+                    try 
                     {
-                        let oFile = m_hFile[oSaved.aSaved[i]];
-                        if (oFile) oFile.m_bChanged = false;
+                        oRet = JSON.parse(sRet);
+                    } catch(e) 
+                    {
+                        ServerMess(e+"\n"+sRet);
+                        break;
                     }
-                    let aNot = [];
-                    Object.keys(oSaved.hNot).forEach(sNot => 
-                        {
-                            aNot.push(sNot);
-                        });
-                    if (aNot.length)
-                        ServerMess("can not save files of type" + (aNot.length>1 ? "s":"") +" : " + aNot.join(" , "));
-                
-                    _SetTabs();
-                    _SetMenu();
-                    break;
-                case 6: // home page
+
+                    if (oRet.sError)
+                    {
+                        ServerMess(oRet.sError);
+                        break;
+                    }
+                }
+ 
+                if (bExternalCall && rCallback)
                 {
-                    _ShowHomepage(true,sJS);
-                    break;
+                        rCallback(iAction,oRet,rCallbackObject);
                 }
-                default:
-                    //ServerMess("update: "+ sJS.length);
-                    //eval(sJS);
-                    try {
-                        eval(sJS); 
-                    } catch (e) {
-                        if (e instanceof SyntaxError) {
-                            ServerMess(e.message + "\nresponseText:\n'"+sJS+"'");
-                        } else {
-                            throw( e );
+                else 
+                {
+                    switch(iAction)
+                    {
+                    case 1:
+                        if (oRet.sTree)
+                        {
+                            m_sRootOrg = oRet.sRootOrg;
+                            let r = document.getElementById("MinIDE_BottomLeft"+m_iId);
+
+                            sTree = '<div style="height:100%;width:'+Math.round(0.15*m_iWidth)+'vw;vertical-align:top;overflow:scroll;">' + oRet.sTree + '</div>';
+                            r.innerHTML = sTree;
+                            init_php_file_tree();
+
+                            _InitTree(oRet);
                         }
+    /*
+                        if (oRet.sTree)
+                        {
+                            m_sRootOrg = oRet.sRootOrg;
+                            let hType = {
+                                "php"   :["htmlmixed","xml","javascript","css","clike","php"]
+                                , "js"  :["javascript"]
+                                , "css" :["css"]
+                                , "htm" :["xml","javascript.js","css","vbscript.js","htmlmixed"]
+                                , "html" :["xml","javascript.js","css","vbscript.js","htmlmixed"]
+                                , "cpp"  :["clike"]
+                                , "c"  :["clike"]
+                                , "h"  :["clike"]
+                            };
+                            let hLoad = {};
+
+                            var re = /([^.]+)'\);/g;
+                            var m;
+                            do {
+                                m = re.exec(oRet.sTree);
+                                if (m)  
+                                    for (var i in hType[m[1]])  
+                                        hLoad[hType[m[1]][i]] = 1;
+                            } while (m);
+
+                            for (var sLoad in hLoad)    loadJS("CodeMirror/mode/"+sLoad+"/"+sLoad+".js");
+
+                            let r = document.getElementById("MinIDE_BottomLeft"+m_iId);
+
+                            sTree = '<div style="height:100%;width:'+Math.round(0.15*m_iWidth)+'vw;vertical-align:top;overflow:scroll;">' + oRet.sTree + '</div>';
+                            r.innerHTML = sTree;
+                            init_php_file_tree();
+
+                            _InitTree(this,sTree,hType,oRet.aOpen);
+                        }
+                        if (oRet.aOpen)
+                        {
+                            for(i in oRet.aOpen)
+                            {
+                                SubmitAjax(2,oRet.aOpen[i]);
+                            }
+                        }
+    */                  else if (oRet.sHomeUrl)
+                            SubmitAjax(6,"",oRet.sHomeUrl,true);
+
+                            break;
+                    case 2:
+                        _OpenFile(new File(sJson,oRet.sFile,oRet.bOrg,true),true);
+                        break;
+                    case 4:
+                        for(var i in oRet.aSaved)
+                        {
+                            let oFile = m_hFile[oRet.aSaved[i]];
+                            if (oFile) oFile.SetState(false,oRet.bOrg);
+                        }
+                        let aNot = [];
+                        Object.keys(oRet.hNot).forEach(sNot => 
+                            {
+                                aNot.push(sNot);
+                            });
+                        if (aNot.length)
+                            ServerMess("can not save files of type" + (aNot.length>1 ? "s":"") +" : " + aNot.join(" , "));
+                    
+                        _SetTabs();
+                        _SetMenu();
+                        break;
+                    case 6: // home page
+                    {
+                        let sName = sUrl.split(".")[0];
+                        _OpenFile(new File(sName,sRet,true,false),true);
+                        //_ShowHomepage(true,sRet);
+                        break;
                     }
-                }
+                    case 7: // user file deleted
+                    {
+                        let oFile = m_hFile[oRet.sDeleted];
+                        if (oFile)
+                        {
+                            oFile.m_sValue = oRet.sValue;
+                            oFile.SetState(false,false);
+                        } 
+                        break;
+                    }
+                    default:
+                        ServerMess("unkown action: "+ iAction);
+                    }
+                    if (rCallback)
+                    {
+                        rCallback(iAction,oRet,rCallbackObject);
+                    }
     
+                }
             }
             if (m_sMess)
             {
-                var rDiv = document.getElementById("ServerMess");
-                rDiv.innerHTML = m_sMess;
-                rDiv.style.display = "";
+                Mess(m_sMess,5);
                 m_sMess = "";
-            
-                window.setTimeout(function () 
-                {
-                    rDiv.style.display = "none";
-                }, 3000);
             }
 
         }
@@ -532,3 +677,62 @@ function MinIDE(sContainerId)
     
 
 }
+
+
+function GetScriptBase()
+{
+    var aScript = document.getElementsByTagName('script');
+    let iPos;
+    for (var i in aScript)
+        if (aScript[i].src)
+            if (0 < (iPos = aScript[i].src.indexOf("MinIDE.js")))
+                return aScript[i].src.substring(0,iPos);
+
+    return false;
+}
+
+
+var loadJS = function(url, rObject,rCallback,oData){
+    var aM = url.match(/\.([^.]+)$/);
+    let sExt = aM[1].toLowerCase();
+
+    var scriptTag;
+    url = GetScriptBase() + url;
+    switch (sExt)
+    {
+    case "js":
+
+
+        scriptTag = document.createElement("script");
+        scriptTag.type = "text/javascript";
+        scriptTag.src = url;
+        break;
+    case "css":
+
+
+        scriptTag = document.createElement("link");
+        scriptTag.rel = "stylesheet";
+        scriptTag.type = "text/css";
+        scriptTag.media="screen";
+        scriptTag.href = url;
+        break;
+    }
+
+
+
+    scriptTag.rObject = rObject;
+    scriptTag.rCallback = rCallback;
+
+    scriptTag.onerror = function(){alert(url + " not found -> aboarting MinIDE :-(")};
+    if (rCallback)
+    {
+        scriptTag.onload = function(){
+            if (rObject)
+                this.rObject[rCallback](oData);
+            else if (rCallback)
+                rCallback(oData);
+        };
+    }
+
+    document.body.appendChild(scriptTag);
+};

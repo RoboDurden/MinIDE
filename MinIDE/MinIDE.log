@@ -1,12 +1,30 @@
-hello world :-) 2021-01-20 00:47:28
+hello world :-) 2021-01-21 18:58:56
 online : 
 load file 'configData.php'
 LoadConfig()
-iAction = 2)
-json length: 75
-Action(2):
-../../source/emanuelferu_hoverboard-firmware-hack-foc/Src/BLDC_controller.c
+oConfig
+:stdClass Object
+(
+    [pPassword] => 
+    [pPasswordNew1] => 
+    [pPasswordNew2] => 
+    [sBlacklist] => ini
+    [sHomepage] => compile.php
+    [sRootOrg] => 
+    [sRootSave] => 
+    [sWhitelist] => c,h
+    [sWhitelistSave] => 
+)
+
+iAction = 1)
+json length: 28
+Action(1):
+{"iId":0,"sPathConfig":null}
 oJson
-:
-load file '../../source/emanuelferu_hoverboard-firmware-hack-foc/Src/BLDC_controller.c'
-close log: 2021-01-20 00:47:28	duration [s]: 0.00082612037658691
+:stdClass Object
+(
+    [iId] => 0
+    [sPathConfig] => 
+)
+
+close log: 2021-01-21 18:58:56	duration [s]: 0.00058293342590332
