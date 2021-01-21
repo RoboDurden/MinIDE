@@ -54,6 +54,9 @@ define('CONFIG_PATH','configData.php');
 
 function LoadConfig($sPath=false)
 {
+    if (!$sPath) $sPath = CONFIG_PATH;
+    x("LoadConfig($sPath)");
+
 	$hConfig = $sPath ? array() : array( "sRoot" => "mode/.."
 	, "sBlacklist" => ""
 	, "sWhitelist" => ""
@@ -63,7 +66,7 @@ function LoadConfig($sPath=false)
 	, "pPasswordNew2" => ""
 	);
 	
-	if (Load($sPath ? $sPath : CONFIG_PATH,$sJson))
+	if (Load($sPath,$sJson))
 	{
 		$sJson = substr($sJson,8,-5);
 		x("LoadConfig()");	// : $sJson

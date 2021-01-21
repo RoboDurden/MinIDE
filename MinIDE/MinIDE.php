@@ -21,7 +21,7 @@ x("oConfig\n:".print_r($oConfig,true));
 $iAction = $_REQUEST['action'];
 $sJson = $_REQUEST['json'];
 
-x("iAction = $iAction)\njson length: ". strlen($sJson));
+x("iAction = $iAction\tjson length: ". strlen($sJson));
 
 Action($iAction,$sJson);
 
@@ -45,7 +45,7 @@ function Action($iAction,$sJson)
             {
                 require("phpFileTree/php_file_tree.php");
 
-                $aWhitlist = explode(",",$oConfig->sWhitelist);
+                $aWhitlist = $oConfig->sWhitelist ? explode(",",$oConfig->sWhitelist) : NULL;
                 $oRet->sTree = php_file_tree($oConfig->sRootOrg, "javascript:CallIDE($oJson->iId,2,'[link]');",$aWhitlist);
                 x("load tree:\n$oRet->sTree");
             }
@@ -97,7 +97,7 @@ function Action($iAction,$sJson)
             if ($sExt = HasAccess($o->m_sPath,TRUE))
             {
                 $oRet->hNot[$sExt] = 1;
-                return;
+                continue;
             }
 
             $sPath = $o->m_sPath;

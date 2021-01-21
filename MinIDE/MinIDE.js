@@ -64,12 +64,13 @@ function CallIDE(iID,iAction,s)
     g_aoMindIDE[iID].CallIDE(iAction,s);
 }
 
-function MinIDE(sContainerId)
+function MinIDE(sContainerId,bNoTree,sPathConfig)
 {
     this.m_iId = g_aoMindIDE.length;
     g_aoMindIDE.push(this);
 
     this.m_sContainerId = sContainerId;
+    this.m_sPathConfig = sPathConfig;
     this.m_iWidth = 100;
     this.m_iHeight = 100;
 
@@ -87,7 +88,6 @@ function MinIDE(sContainerId)
     this._aLoad = ["CodeMirror/lib/codemirror.css","CodeMirror/doc/docs.css","phpFileTree/styles/default/default.css","MinIDE.css"
         ,"CodeMirror/lib/codemirror.js","CodeMirror/addon/edit/matchbrackets.js","phpFileTree/php_file_tree.js"];
 
-    this.m_sConfigPath = "";
     this.m_sRootOrg = "";
 
 
@@ -136,12 +136,12 @@ function MinIDE(sContainerId)
 
             }
         });
-        SubmitAjax(1,JSON.stringify({"iId":m_iId, "sPathConfig":null}));
+        SubmitAjax(1,JSON.stringify({"iId":m_iId, "sPathConfig":m_sPathConfig}));
     }}
 
     this.LoadTree = function(sPathConfig)
     {with(this){
-        m_sConfigPath = sPathConfig;
+        m_sPathConfig = sPathConfig;
         SubmitAjax(1,JSON.stringify({"iId":m_iId}));
         //SubmitAjax(1,JSON.stringify({"iId":m_iId, "sPathConfig":sPathConfig}));
     }}
@@ -451,8 +451,8 @@ function MinIDE(sContainerId)
                 "php"   :["htmlmixed","xml","javascript","css","clike","php"]
                 , "js"  :["javascript"]
                 , "css" :["css"]
-                , "htm" :["xml","javascript.js","css","vbscript.js","htmlmixed"]
-                , "html" :["xml","javascript.js","css","vbscript.js","htmlmixed"]
+                , "htm" :["xml","javascript","css","vbscript","htmlmixed"]
+                , "html" :["xml","javascript","css","vbscript","htmlmixed"]
                 , "cpp"  :["clike"]
                 , "c"  :["clike"]
                 , "h"  :["clike"]
@@ -495,8 +495,8 @@ function MinIDE(sContainerId)
         //oData.append(rSID.name,rSID.value);
         oData.append('action',iAction);
         oData.append('json',sJson);
-        if (m_sConfigPath)
-            oData.append('config',m_sConfigPath);
+        if (m_sPathConfig)
+            oData.append('config',m_sPathConfig);
     
     
         // Create our XMLHttpRequest object
@@ -613,7 +613,7 @@ function MinIDE(sContainerId)
                                 SubmitAjax(2,oRet.aOpen[i]);
                             }
                         }
-    */                  else if (oRet.sHomeUrl)
+    */                  if (oRet.sHomeUrl)
                             SubmitAjax(6,"",oRet.sHomeUrl,true);
 
                             break;

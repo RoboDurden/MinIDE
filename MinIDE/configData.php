@@ -2,10 +2,10 @@
 {"pPassword":"",
 "pPasswordNew1":"",
 "pPasswordNew2":"",
-"sBlacklist":"ini",
-"sHomepage":"compile.php",
-"sRootOrg":"",
+"sBlacklist":"",
+"sHomepage":"homepage.php",
+"sRootOrg":"CodeMirror\/..",
 "sRootSave":"",
-"sWhitelist":"c,h",
-"sWhitelistSave":""}
+"sWhitelist":"",
+"sWhitelistSave":"log,txt"}
 */?>

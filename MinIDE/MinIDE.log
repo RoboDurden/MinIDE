@@ -1,5 +1,6 @@
-hello world :-) 2021-01-21 18:58:56
+hello world :-) 2021-01-21 20:15:10
 online : 
+LoadConfig(configData.php)
 load file 'configData.php'
 LoadConfig()
 oConfig
@@ -8,23 +9,41 @@ oConfig
     [pPassword] => 
     [pPasswordNew1] => 
     [pPasswordNew2] => 
-    [sBlacklist] => ini
-    [sHomepage] => compile.php
-    [sRootOrg] => 
+    [sBlacklist] => 
+    [sHomepage] => homepage.php
+    [sRootOrg] => CodeMirror/../..
     [sRootSave] => 
-    [sWhitelist] => c,h
-    [sWhitelistSave] => 
+    [sWhitelist] => 
+    [sWhitelistSave] => log,txt
 )
 
-iAction = 1)
-json length: 28
-Action(1):
-{"iId":0,"sPathConfig":null}
+iAction = 4	json length: 351
+Action(4):
+[{"m_sPath":"CodeMirror/../../MinIDE/config.log","m_sValue":"hello world :-) 2021-01-21 20:14:04\nonline : \nLoadConfig(configData.php)\nload file 'configData.php'\nLoadConfig()\n\nsaving file configData.php ...\nclose log: 2021-01-21 20:14:04\tduration [s]: 0.0016489028930664","m_bOrg":true,"m_bEditable":true,"m_rContainer":null,"m_bChanged":true}]
 oJson
-:stdClass Object
+:Array
 (
-    [iId] => 0
-    [sPathConfig] => 
+    [0] => stdClass Object
+        (
+            [m_sPath] => CodeMirror/../../MinIDE/config.log
+            [m_sValue] => hello world :-) 2021-01-21 20:14:04
+online : 
+LoadConfig(configData.php)
+load file 'configData.php'
+LoadConfig()
+
+saving file configData.php ...
+close log: 2021-01-21 20:14:04	duration [s]: 0.0016489028930664
+            [m_bOrg] => 1
+            [m_bEditable] => 1
+            [m_rContainer] => 
+            [m_bChanged] => 1
+        )
+
 )
 
-close log: 2021-01-21 18:58:56	duration [s]: 0.00058293342590332
+checking CodeMirror/../../MinIDE/config.log
+HasAccess(CodeMirror/../../MinIDE/config.log,1)
+log in whitelistSave: log , txt
+saving file CodeMirror/../../MinIDE/config.log ...
+close log: 2021-01-21 20:15:10	duration [s]: 0.020231008529663
