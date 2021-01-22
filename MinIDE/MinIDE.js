@@ -669,7 +669,7 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
 
             if (m_sMess)
             {
-                Mess(m_sMess,55);
+                Mess(m_sMess,5);
                 m_sMess = "";
             }
 
