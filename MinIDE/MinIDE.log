@@ -1,7 +1,7 @@
-hello world :-) 2021-01-22 16:15:23
+hello world :-) 2021-01-22 18:14:57
 online : 
-LoadConfig(../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/configData.php)
-load file '../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/configData.php'
+LoadConfig(../../configData.php)
+load file '../../configData.php'
 LoadConfig()
 oConfig
 :stdClass Object
@@ -10,22 +10,22 @@ oConfig
     [pPasswordNew1] => 
     [pPasswordNew2] => 
     [sBlacklist] => ini
-    [sHomepage] => 
-    [sRepoDate] => 2021-01-02T09:49:52Z
-    [sRootOrg] => ../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/_org
-    [sRootSave] => ../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/new
+    [sHomepage] => compile.php
+    [sRepoDate] => 
+    [sRootOrg] => 
+    [sRootSave] => 
     [sWhitelist] => c,h
     [sWhitelistSave] => 
-    [sUserDate] => 2021-01-02T09:49:52Z
 )
 
-iAction = 7	json length: 74
-Action(7):
-../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/_org/Inc/config.h
+iAction = 1	json length: 46
+Action(1):
+{"iId":0,"sPathConfig":"../../configData.php"}
 oJson
-:
-HasAccess(../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/_org/Inc/config.h,1)
-h in whitelist: c , h
-load file '../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/_org/Inc/config.h'
-delete /Inc/config.h from sRootSave = ../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/new
-close log: 2021-01-22 16:15:23	duration [s]: 0.0038249492645264
+:stdClass Object
+(
+    [iId] => 0
+    [sPathConfig] => ../../configData.php
+)
+
+close log: 2021-01-22 18:14:57	duration [s]: 0.00073790550231934
