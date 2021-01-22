@@ -1,7 +1,7 @@
-hello world :-) 2021-01-21 20:15:10
+hello world :-) 2021-01-22 16:15:23
 online : 
-LoadConfig(configData.php)
-load file 'configData.php'
+LoadConfig(../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/configData.php)
+load file '../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/configData.php'
 LoadConfig()
 oConfig
 :stdClass Object
@@ -9,41 +9,23 @@ oConfig
     [pPassword] => 
     [pPasswordNew1] => 
     [pPasswordNew2] => 
-    [sBlacklist] => 
-    [sHomepage] => homepage.php
-    [sRootOrg] => CodeMirror/../..
-    [sRootSave] => 
-    [sWhitelist] => 
-    [sWhitelistSave] => log,txt
+    [sBlacklist] => ini
+    [sHomepage] => 
+    [sRepoDate] => 2021-01-02T09:49:52Z
+    [sRootOrg] => ../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/_org
+    [sRootSave] => ../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/new
+    [sWhitelist] => c,h
+    [sWhitelistSave] => 
+    [sUserDate] => 2021-01-02T09:49:52Z
 )
 
-iAction = 4	json length: 351
-Action(4):
-[{"m_sPath":"CodeMirror/../../MinIDE/config.log","m_sValue":"hello world :-) 2021-01-21 20:14:04\nonline : \nLoadConfig(configData.php)\nload file 'configData.php'\nLoadConfig()\n\nsaving file configData.php ...\nclose log: 2021-01-21 20:14:04\tduration [s]: 0.0016489028930664","m_bOrg":true,"m_bEditable":true,"m_rContainer":null,"m_bChanged":true}]
+iAction = 7	json length: 74
+Action(7):
+../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/_org/Inc/config.h
 oJson
-:Array
-(
-    [0] => stdClass Object
-        (
-            [m_sPath] => CodeMirror/../../MinIDE/config.log
-            [m_sValue] => hello world :-) 2021-01-21 20:14:04
-online : 
-LoadConfig(configData.php)
-load file 'configData.php'
-LoadConfig()
-
-saving file configData.php ...
-close log: 2021-01-21 20:14:04	duration [s]: 0.0016489028930664
-            [m_bOrg] => 1
-            [m_bEditable] => 1
-            [m_rContainer] => 
-            [m_bChanged] => 1
-        )
-
-)
-
-checking CodeMirror/../../MinIDE/config.log
-HasAccess(CodeMirror/../../MinIDE/config.log,1)
-log in whitelistSave: log , txt
-saving file CodeMirror/../../MinIDE/config.log ...
-close log: 2021-01-21 20:15:10	duration [s]: 0.020231008529663
+:
+HasAccess(../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/_org/Inc/config.h,1)
+h in whitelist: c , h
+load file '../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/_org/Inc/config.h'
+delete /Inc/config.h from sRootSave = ../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/new
+close log: 2021-01-22 16:15:23	duration [s]: 0.0038249492645264

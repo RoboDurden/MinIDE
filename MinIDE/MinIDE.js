@@ -532,7 +532,7 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
                 }
 
                 var sRet = hr.responseText;
-                let oRet;
+                let oRet = null;
                 if (!bNoJson)
                 {
                     try 
@@ -663,10 +663,13 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
                     }
     
                 }
+                if (oRet) if (oRet.sMess)
+                    ServerMess(oRet.sMess);
             }
+
             if (m_sMess)
             {
-                Mess(m_sMess,5);
+                Mess(m_sMess,55);
                 m_sMess = "";
             }
 
