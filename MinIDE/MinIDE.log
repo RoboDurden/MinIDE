@@ -1,4 +1,4 @@
-hello world :-) 2021-01-23 12:28:45
+hello world :-) 2021-01-23 12:46:18
 online : 
 LoadConfig(../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/configData.php)
 load file '../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/configData.php'
@@ -21,4 +21,4 @@ oJson
 HasAccess(../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/_org/Inc/config.h,)
 load /Inc/config.h from sRootSave = ../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/new
 load file '../../user/robo/emanuelferu_hoverboard-firmware-hack-foc/new/Inc/config.h'
-close log: 2021-01-23 12:28:45	duration [s]: 0.00084614753723145
+close log: 2021-01-23 12:46:18	duration [s]: 0.0014359951019287
