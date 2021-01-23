@@ -1,7 +1,0 @@
-hello world :-) 2021-01-21 20:17:23
-online : 
-LoadConfig(configData.php)
-load file 'configData.php'
-LoadConfig()
-saving file configData.php ...
-close log: 2021-01-21 20:17:23	duration [s]: 0.015893936157227
