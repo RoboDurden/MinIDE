@@ -77,9 +77,12 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
     this.m_oEditor = null;
 
     this.m_sMess = "";
+    this.m_hInterval = null;
 
     this.m_hFile = {};
     this.m_oFile = null;
+
+    this.m_hButton = {};
 
     this.m_bChanges = false;
 
@@ -144,6 +147,22 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
         m_sPathConfig = sPathConfig;
         SubmitAjax(1,JSON.stringify({"iId":m_iId}));
         //SubmitAjax(1,JSON.stringify({"iId":m_iId, "sPathConfig":sPathConfig}));
+    }}
+
+    this.CloseTree = function()   // will not save changes! call SaveAll yourself in advance
+    {with(this){
+
+        m_oFile = null;
+        for (var sPath in m_hFile)
+        if (m_hFile[sPath].m_bEditable)
+            delete m_hFile[sPath];
+
+        _OpenFile(null);
+        _SetMenu();
+
+        m_sRootOrg = "";
+        let r = document.getElementById("MinIDE_BottomLeft"+m_iId);
+        r.innerHTML = "";
     }}
 
 
@@ -216,12 +235,23 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
         if (bChanges)
             s += '<input type="button" class="MinIdeMenu" onClick="CallIDE('+m_iId+',5);" value="Save All" />';
 
+        for (var sButton in m_hButton)
+            s += " " + m_hButton[sButton];
 
         let r = document.getElementById("MinIDE_TopLeft"+m_iId);
         r.innerHTML = s;
 
     }}
 
+    this.SetButton = function(sName,sHtml)
+    {with(this){
+        if (sHtml)
+            m_hButton[sName] = sHtml;
+        else 
+            delete m_hButton[sName];
+
+        _SetMenu();
+    }}
 
 
     this._SetTabs = function()
@@ -313,7 +343,7 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
             for (var sPath in m_hFile)
                 if (!m_hFile[sPath].m_bEditable)
                 {
-                    _OpenFile(sPath);
+                    _OpenFile(m_hFile[sPath]);
                     break;
                 }
 
@@ -412,22 +442,25 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
     }}
 
     this.Mess = function(s,iSeconds)
-    {
+    {with(this){
         var rDiv = document.getElementById("ServerMess");
         rDiv.innerHTML = s + " <span id='TimerMess'></span>";
         rDiv.style.display = "";
     
-        var hInterval = window.setInterval(function () 
+        if (m_hInterval)
+            window.clearInterval(m_hInterval);
+        m_hInterval = window.setInterval(function () 
         {
             var r = document.getElementById("TimerMess");
             r.innerHTML = iSeconds--;
             if (iSeconds<0)
             {
                 rDiv.style.display = "none";
-                window.clearInterval(hInterval);
+                window.clearInterval(m_hInterval);
+                m_hInterval = null;
             }
         }, 1000);
-    }
+    }}
 
     this.ServerMess = function(sMess,bInstant)
     {with(this){
@@ -669,7 +702,7 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
 
             if (m_sMess)
             {
-                Mess(m_sMess,5);
+                Mess(m_sMess,m_sMess.length > 100 ? 30 : 5);
                 m_sMess = "";
             }
 
