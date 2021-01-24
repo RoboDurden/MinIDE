@@ -6,6 +6,7 @@ function File(sPath,sValue,bOrg,bEditable)
     this.m_sValue = sValue;
     this.m_bOrg = bOrg; // no modified file yet saved to config.sRootSave
     this.m_bEditable = bEditable;
+    this.m_oCursor = null;
     this.m_rContainer = null;
 
     //this.m_sValueOrg = "";
@@ -291,7 +292,11 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
         if (m_oFile) 
         {
             if (this.m_oFile.m_bEditable)
+            {
+                let aLineChar = this.m_oEditor.getCursor();
                 m_oFile.m_sValue = m_oEditor.getValue();
+                m_oFile.m_oCursor = m_oEditor.getCursor();
+            }
 
             if (m_oFile.m_rContainer)
                 m_oFile.m_rContainer.style.display = "none";
@@ -315,6 +320,12 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
     //            loadJS("mode/javascript/javascript.js",this._SetEditor);
 
                 m_oEditor.setValue(oFile.m_sValue);
+
+                if (oFile.m_oCursor)
+                    m_oEditor.setCursor(oFile.m_oCursor);
+
+                    m_oEditor.focus();
+
                 //if (bNew)   m_oFile.m_sValue = m_oFile.m_sValueOrg = m_oEditor.getValue();
 
             }
