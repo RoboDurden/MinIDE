@@ -7,6 +7,8 @@ function File(sPath,sValue,bOrg,bEditable)
     this.m_bOrg = bOrg; // no modified file yet saved to config.sRootSave
     this.m_bEditable = bEditable;
     this.m_oCursor = null;
+    this.m_oScrollInfo = null;
+
     this.m_rContainer = null;
 
     //this.m_sValueOrg = "";
@@ -82,6 +84,7 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
 
     this.m_hFile = {};
     this.m_oFile = null;
+    this.m_slastEdit = "";
 
     this.m_hButton = {};
 
@@ -296,6 +299,7 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
                 let aLineChar = this.m_oEditor.getCursor();
                 m_oFile.m_sValue = m_oEditor.getValue();
                 m_oFile.m_oCursor = m_oEditor.getCursor();
+                m_oFile.m_oScrollInfo = m_oEditor.getScrollInfo();                        
             }
 
             if (m_oFile.m_rContainer)
@@ -314,17 +318,20 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
             if (oFile.m_bEditable)
             {
                 rDivEditor.style.display = "";
-                m_oEditor.setOption("mode", oFile.GetFormat());
-                
-    //            m_oFile = m_hFile[oFile.m_sPath] = oFile;
-    //            loadJS("mode/javascript/javascript.js",this._SetEditor);
+                if (m_slastEdit != oFile.m_sPath)
+                {
+                    m_oEditor.setOption("mode", oFile.GetFormat());
+                    m_oEditor.setValue(oFile.m_sValue);
+                    if (oFile.m_oCursor)
+                    {
+                        m_oEditor.setCursor(oFile.m_oCursor);
+                        m_oEditor.scrollTo(oFile.m_oScrollInfo.left,oFile.m_oScrollInfo.top);
+                    }
+                    
+                    m_slastEdit = oFile.m_sPath;
+                }
 
-                m_oEditor.setValue(oFile.m_sValue);
-
-                if (oFile.m_oCursor)
-                    m_oEditor.setCursor(oFile.m_oCursor);
-
-                    m_oEditor.focus();
+                m_oEditor.focus();
 
                 //if (bNew)   m_oFile.m_sValue = m_oFile.m_sValueOrg = m_oEditor.getValue();
 
