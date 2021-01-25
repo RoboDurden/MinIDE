@@ -11,15 +11,16 @@ define('C_sLogFile',	'MinIDE.log');
 
 require('_common.php');
 
-if (!isset($_REQUEST['action']))
+if (!isset($_POST['action']))
     die ("ServerMess('no action');");
 
-$oConfig = isset($_REQUEST['config']) ? LoadConfig($_REQUEST['config']) : LoadConfig();
+$g_sConfigPath = isset($_POST['config']) ? $_POST['config'] : false;
+$oConfig = LoadConfig($g_sConfigPath);
 
 x("oConfig\n:".print_r($oConfig,true));
 
-$iAction = $_REQUEST['action'];
-$sJson = $_REQUEST['json'];
+$iAction = $_POST['action'];
+$sJson = $_POST['json'];
 
 x("iAction = $iAction\tjson length: ". strlen($sJson));
 
@@ -29,48 +30,50 @@ xx();
 
 function Action($iAction,$sJson)
 {
-    global $oConfig;
+    global $oConfig,$g_sConfigPath;
     x("Action($iAction):\n$sJson");
 
     $oJson = json_decode($sJson);
     x("oJson\n:".print_r($oJson,true));
 
+    $hFile = $oConfig->sFiles ? (array) json_decode($oConfig->sFiles) : array();
+    x("hFileConfig\n:".print_r($hFile,true));
+
+    $oRet = (object) array();
+
     switch ($iAction)
     {
-        case 1: // load tree
-            $oRet = (object) array('sTree' => ''    , 'sHomeUrl' => '');
+    case 1: // load tree
+        if ($oConfig->sRootOrg)
+        {
+            require("phpFileTree/php_file_tree.php");
 
+            $aWhitlist = $oConfig->sWhitelist ? explode(",",$oConfig->sWhitelist) : NULL;
+            $oRet->sTree = php_file_tree($oConfig->sRootOrg, "javascript:CallIDE($oJson->iId,2,'[link]');",$aWhitlist);
+            x("load tree:\n$oRet->sTree");
+        }
+        $oRet->sRootOrg = $oConfig->sRootOrg;
+        $oRet->sHomeUrl = $oConfig->sHomepage;
 
-            if ($oConfig->sRootOrg)
-            {
-                require("phpFileTree/php_file_tree.php");
+        if ($oConfig->sRootSave)
+        {
+            $aOpen = GetDirR($oConfig->sRootSave,$oConfig->sRootSave,$oConfig->sRootOrg."/");
+            x("aFile\n:".print_r($aOpen,true));
+            $oRet->aOpen = $aOpen;
 
-                $aWhitlist = $oConfig->sWhitelist ? explode(",",$oConfig->sWhitelist) : NULL;
-                $oRet->sTree = php_file_tree($oConfig->sRootOrg, "javascript:CallIDE($oJson->iId,2,'[link]');",$aWhitlist);
-                x("load tree:\n$oRet->sTree");
-            }
-            $oRet->sRootOrg = $oConfig->sRootOrg;
-            $oRet->sHomeUrl = $oConfig->sHomepage;
-
-            if ($oConfig->sRootSave)
-            {
-                $aOpen = GetDirR($oConfig->sRootSave,$oConfig->sRootSave,$oConfig->sRootOrg."/");
-                x("aFile\n:".print_r($aOpen,true));
-                $oRet->aOpen = $aOpen;
-
-            }    
-            echo json_encode($oRet);
-            return;
+        }    
+        break;
     case 2: // load file
 
         $sPath = $sJson;
         if ($sExt = HasAccess($sPath,FALSE))
             return Error("no read access to $sPath");
 
-        $oRet = (object) array("bOrg" => true);
+        $sFile = substr($sPath,strlen($oConfig->sRootOrg));
+
+        $oRet->bOrg = true;
         if ($oConfig->sRootSave)
         {
-            $sFile = substr($sPath,strlen($oConfig->sRootOrg));
             x("load $sFile from sRootSave = $oConfig->sRootSave");
 
             $sPath = $oConfig->sRootSave . $sFile;
@@ -87,10 +90,13 @@ function Action($iAction,$sJson)
         else
             $oRet->sError = $s;
 
-        echo json_encode($oRet);
-        return;
+        if (isset($hFile[$sFile]))
+            $oRet->hSetting = array("iChar" => $hFile[$sFile][0], "iLine" => $hFile[$sFile][1], "iTop" => $hFile[$sFile][2]);
+
+        break;
     case 4: // save Files
         $oRet = (object) array('aSaved' => array()    , 'hNot' => array(), 'bOrg' => (!$oConfig->sRootSave));
+        
         foreach($oJson AS $i => $o)
         {
             x("checking $o->m_sPath");
@@ -101,9 +107,9 @@ function Action($iAction,$sJson)
             }
 
             $sPath = $o->m_sPath;
+            $sFile = substr($sPath,strlen($oConfig->sRootOrg));
             if ($oConfig->sRootSave)
             {
-                $sFile = substr($sPath,strlen($oConfig->sRootOrg));
                 x("save $sFile to sRootSave = $oConfig->sRootSave");
 
                 $sPath = $oConfig->sRootSave . $sFile;
@@ -120,22 +126,23 @@ function Action($iAction,$sJson)
             if (Save($sPath,$o->m_sValue))
                 $oRet->aSaved[] = $o->m_sPath;
 
+            $hFile[$sFile] = [$o->m_oCursor->ch,$o->m_oCursor->line,round($o->m_oScrollInfo->top)];
         }
-        echo json_encode($oRet);
-        return;
+
+        $oConfig->sFiles =  json_encode($hFile);
+        x("new hFileConfig:\t$oConfig->sFiles");
+		SaveConfig($oConfig,$g_sConfigPath);
+
+        break;
 
     case 7: // delete file
 
         $sPath = $sJson;
-        $oRet = (object) array();
-
         if ($sExt = HasAccess($sPath,TRUE))
         {
             $oRet->hNot[$sExt] = 1;
             return;
         }
-
-
         if ($oConfig->sRootSave)
         {
             if (!Load($sPath,$s))
@@ -151,9 +158,12 @@ function Action($iAction,$sJson)
             return Error("there is no file $sFile to delete.");
 
         unlink($sPath);
-        echo json_encode($oRet);
-        return;
+        break;
     }
+    $sJson = json_encode($oRet);
+    x("oRet: $sJson");
+    echo $sJson;
+    return;
 }
 
 function HasAccess($sPath,$bModify)

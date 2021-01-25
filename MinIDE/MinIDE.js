@@ -14,6 +14,17 @@ function File(sPath,sValue,bOrg,bEditable)
     //this.m_sValueOrg = "";
     this.m_bChanged = false;
 
+    this.UpdateData = function(rEditor)
+    {with(this){
+        if (!m_bEditable)
+            return;
+
+        //let aLineChar = this.m_oEditor.getCursor();
+        m_sValue = rEditor.getValue();
+        m_oCursor = rEditor.getCursor();
+        m_oScrollInfo = rEditor.getScrollInfo();                        
+    }}
+
     this.SetState = function(bChanged,bOrg)
     {with(this){
         m_bChanged = bChanged;
@@ -110,7 +121,22 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
             lineNumbers: true,
             mode: "text/html",
             matchBrackets: true,
+            customKeys: {
+                "Ctrl-F": function(cm) {
+                    alert(1);
+                },
+                "Ctrl-G": function(cm) {
+                    alert(2);
+                }
+            },
+
             extraKeys: {
+                "Ctrl-F": function(cm) {
+                    alert(3);
+                },
+                "Ctrl-G": function(cm) {
+                    alert(4);
+                },
                 "Ctrl-S": function(cm) {
                     SaveOpenFile();
                 }
@@ -278,8 +304,7 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
 
     this.SaveOpenFile = function()
     {with(this){
-
-        m_oFile.m_sValue = m_oEditor.getValue();
+        m_oFile.UpdateData(m_oEditor);
         let sJson = JSON.stringify([m_oFile]);
         SubmitAjax(4,sJson);
 
@@ -294,13 +319,7 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
     {with(this){
         if (m_oFile) 
         {
-            if (this.m_oFile.m_bEditable)
-            {
-                let aLineChar = this.m_oEditor.getCursor();
-                m_oFile.m_sValue = m_oEditor.getValue();
-                m_oFile.m_oCursor = m_oEditor.getCursor();
-                m_oFile.m_oScrollInfo = m_oEditor.getScrollInfo();                        
-            }
+            m_oFile.UpdateData(m_oEditor);
 
             if (m_oFile.m_rContainer)
                 m_oFile.m_rContainer.style.display = "none";
@@ -443,8 +462,7 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
     
     this.SaveAll = function(rCallback,rCallbackObject)
     {with(this){
-        if (m_oFile.m_bEditable)
-            m_oFile.m_sValue = m_oEditor.getValue();
+        m_oFile.UpdateData(this.m_oEditor);
 
         let aSave = [];
         Object.values(m_hFile).forEach(oFile => 
@@ -669,7 +687,13 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
 
                             break;
                     case 2:
-                        _OpenFile(new File(sJson,oRet.sFile,oRet.bOrg,true),true);
+                        let oFile = new File(sJson,oRet.sFile,oRet.bOrg,true);
+                        if (oRet.hSetting)
+                        {
+                            oFile.m_oCursor = {"ch":oRet.hSetting.iChar, "line" : oRet.hSetting.iLine};
+                            oFile.m_oScrollInfo = {"left":0, "top" : oRet.hSetting.iTop};
+                        }
+                        _OpenFile(oFile,true);
                         break;
                     case 4:
                         for(var i in oRet.aSaved)

@@ -32,8 +32,8 @@ x("hello world :-) " . Timestamp(),1);
 x('online : '.C_bOnline);
 
 
-foreach($_GET AS $sKey => $sValue)	x("_GET: $sKey => $sValue");
-//foreach($_POST AS $sKey => $sValue)	x("_POST: $sKey => $sValue");
+//foreach($_GET AS $sKey => $sValue)	x("_GET: $sKey => $sValue");
+foreach($_POST AS $sKey => $sValue)	x("_POST: $sKey => $sValue");
 //foreach($_COOKIE AS $sKey => $sValue)	x("__COOKIE: $sKey => $sValue");
 //foreach($_REQUEST AS $sKey => $sValue)	x("_REQUEST: $sKey => $sValue");
 foreach($_FILES AS $sKey => $aF)
