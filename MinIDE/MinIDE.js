@@ -14,6 +14,7 @@ function File(sPath,sValue,bOrg,bEditable)
     //this.m_sValueOrg = "";
     this.m_bChanged = false;
 
+
     this.UpdateData = function(rEditor)
     {with(this){
         if (!m_bEditable)
@@ -111,6 +112,19 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
 
     this.m_sRootOrg = "";
 
+    this.m_sHelp = `
+<table style="font-size:12pt;">
+    <tr><td>Ctrl-S</td><td style="text-align:left;">save file</td></tr>
+    <tr><td>Ctrl-F / Cmd-F</td><td style="text-align:left;">Start searching</td></tr>
+    <tr><td>Ctrl-G / Cmd-G</td><td style="text-align:left;">Find next</td></tr>
+    <tr><td>Shift-Ctrl-G / Shift-Cmd-G</td><td style="text-align:left;">Find previous</td></tr>
+    <tr><td>Shift-Ctrl-F / Cmd-Option-F</td><td style="text-align:left;">Replace</td></tr>
+    <tr><td>Shift-Ctrl-R / Shift-Cmd-Option-F</td><td style="text-align:left;">Replace all</td></tr>
+    <tr><td>Alt-F</td><td style="text-align:left;">Persistent search (dialog doesn't autoclose,
+    enter to find next, Shift-Enter to find previous)</td></tr>
+    <tr><td>Alt-G</td><td style="text-align:left;">Jump to line</td></tr>
+</table>
+`;
 
 
     this._Init = function()
@@ -656,53 +670,13 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
                             init_php_file_tree();
 
                             _InitTree(oRet);
+                            oRet.sMess = oRet.sMess ? oRet.sMess + m_sHelp : m_sHelp;
                         }
-    /*
-                        if (oRet.sTree)
-                        {
-                            m_sRootOrg = oRet.sRootOrg;
-                            let hType = {
-                                "php"   :["htmlmixed","xml","javascript","css","clike","php"]
-                                , "js"  :["javascript"]
-                                , "css" :["css"]
-                                , "htm" :["xml","javascript.js","css","vbscript.js","htmlmixed"]
-                                , "html" :["xml","javascript.js","css","vbscript.js","htmlmixed"]
-                                , "cpp"  :["clike"]
-                                , "c"  :["clike"]
-                                , "h"  :["clike"]
-                            };
-                            let hLoad = {};
 
-                            var re = /([^.]+)'\);/g;
-                            var m;
-                            do {
-                                m = re.exec(oRet.sTree);
-                                if (m)  
-                                    for (var i in hType[m[1]])  
-                                        hLoad[hType[m[1]][i]] = 1;
-                            } while (m);
+                        if (oRet.sHomeUrl)
+                        SubmitAjax(6,"",oRet.sHomeUrl,true);
 
-                            for (var sLoad in hLoad)    loadJS("CodeMirror/mode/"+sLoad+"/"+sLoad+".js");
-
-                            let r = document.getElementById("MinIDE_BottomLeft"+m_iId);
-
-                            sTree = '<div style="height:100%;width:'+Math.round(0.15*m_iWidth)+'vw;vertical-align:top;overflow:scroll;">' + oRet.sTree + '</div>';
-                            r.innerHTML = sTree;
-                            init_php_file_tree();
-
-                            _InitTree(this,sTree,hType,oRet.aOpen);
-                        }
-                        if (oRet.aOpen)
-                        {
-                            for(i in oRet.aOpen)
-                            {
-                                SubmitAjax(2,oRet.aOpen[i]);
-                            }
-                        }
-    */                  if (oRet.sHomeUrl)
-                            SubmitAjax(6,"",oRet.sHomeUrl,true);
-
-                            break;
+                        break;
                     case 2:
                         let oFile = new File(sJson,oRet.sFile,oRet.bOrg,true);
                         if (oRet.hSetting)
