@@ -103,8 +103,11 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
 
     this.m_aTabStack = [];
 
-    this._aLoad = ["CodeMirror/lib/codemirror.css","CodeMirror/doc/docs.css","phpFileTree/styles/default/default.css","MinIDE.css"
-        ,"CodeMirror/lib/codemirror.js","CodeMirror/addon/edit/matchbrackets.js","phpFileTree/php_file_tree.js"];
+    this._aLoad = ["CodeMirror/lib/codemirror.css","CodeMirror/doc/docs.css","CodeMirror/addon/dialog/dialog.css","CodeMirror/addon/search/matchesonscrollbar.css"
+        ,"phpFileTree/styles/default/default.css","MinIDE.css"
+        ,"CodeMirror/lib/codemirror.js","CodeMirror/addon/edit/matchbrackets.js","CodeMirror/addon/dialog/dialog.js","CodeMirror/addon/search/searchcursor.js"
+        ,"CodeMirror/addon/search/search.js","CodeMirror/addon/scroll/annotatescrollbar.js","CodeMirror/addon/search/matchesonscrollbar.js"
+        ,"CodeMirror/addon/search/jump-to-line.js","phpFileTree/php_file_tree.js"];
 
     this.m_sRootOrg = "";
 
@@ -122,21 +125,9 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
             mode: "text/html",
             matchBrackets: true,
             customKeys: {
-                "Ctrl-F": function(cm) {
-                    alert(1);
-                },
-                "Ctrl-G": function(cm) {
-                    alert(2);
-                }
             },
 
             extraKeys: {
-                "Ctrl-F": function(cm) {
-                    alert(3);
-                },
-                "Ctrl-G": function(cm) {
-                    alert(4);
-                },
                 "Ctrl-S": function(cm) {
                     SaveOpenFile();
                 }
@@ -309,6 +300,32 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
         SubmitAjax(4,sJson);
 
     }}
+
+    this.Find = function(s)
+    {with(this){
+        if (!s)
+            s = prompt("search for:");
+        alert("find " + s);
+    }}
+    this.Goto = function(iLine)
+    {with(this){
+        if (iLine<0)
+            iLine = prompt("go to line:");
+        iLine = parseInt(iLine);
+        if (isNaN(iLine))
+            return;
+        //alert("now goto line " + iLine);
+
+        m_oEditor.setCursor(iLine,0);
+        var t = m_oEditor.charCoords({line: iLine, ch: 0}, "local").top; 
+        var middleHeight = m_oEditor.getScrollerElement().offsetHeight / 2; 
+        m_oEditor.scrollTo(null, t - middleHeight - 5); 
+
+        //m_oEditor.setCursor(iLine,0,{scroll:true});
+        //m_oEditor.scrollTo(oFile.m_oScrollInfo.left,oFile.m_oScrollInfo.top);
+
+    }}
+
 
     this._SetEditor = function()
     {with(this){
