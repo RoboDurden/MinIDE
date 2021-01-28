@@ -1,6 +1,8 @@
 # MinIDE, a minimal IDE based on CodeMirror
 
-## demo: https://www.robosoft.de/MinIDE/test.htm
+## how to add to your project: https://www.robosoft.de/MinIDE/AjaxDemo.htm
+
+## standalone demo: https://www.robosoft.de/MinIDE/test.htm
 
 - Simply copy the MinIDE folder into your project
 - your index.htm should look like
