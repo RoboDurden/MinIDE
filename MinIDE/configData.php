@@ -7,5 +7,6 @@
 "sRootOrg":"CodeMirror\/..",
 "sRootSave":"",
 "sWhitelist":"",
-"sWhitelistSave":"log,txt"}
+"sWhitelistSave":"log,txt",
+"sFiles":"{\"\\\/MinIDE.log\":[16,8,0],\"\\\/config.log\":[9,1,0]}"}
 */?>

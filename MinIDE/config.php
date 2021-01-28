@@ -47,7 +47,7 @@ if (isset($_POST['save']))
 {
     $bSave = true;
     $hConfig = array();
-    $hConfigLoad = (array)LoadConfig();
+    $hConfigLoad = (array)LoadConfig($_REQUEST['config']);
 
     if ($_POST['pPassword'] != $hConfigLoad['pPassword'])
         $bSave = Mess("wrong pPassword");
@@ -89,7 +89,7 @@ if (isset($_POST['save']))
 
         if (strpos($_SERVER['HTTP_HOST'],'robosoft') !== FALSE)
             Mess("demo version :-) config save not allowed.");
-        else if (SaveConfig($hConfig))
+        else if (SaveConfig($hConfig,$_REQUEST['config']))
             Mess("config saved :-)");
     }
 

@@ -54,13 +54,14 @@ define('CONFIG_PATH','configData.php');
 
 function LoadConfig($sPath=false)
 {
-    if (!$sPath) $sPath = CONFIG_PATH;
+    $sPath = $sPath ? "$sPath.php" : CONFIG_PATH;
     x("LoadConfig($sPath)");
 
-	$hConfig = $sPath ? array() : array( "sRoot" => "mode/.."
+	$hConfig = array( "sRootOrg" => "CodeMirror/.."
 	, "sBlacklist" => ""
 	, "sWhitelist" => ""
-	, "sWhitelistSave" => "htm,js,css,txt"
+	, "sWhitelistSave" => "log,txt"
+	, "sHomepage" => ""
 	, "pPassword" => ""
 	, "pPasswordNew1" => ""
 	, "pPasswordNew2" => ""
@@ -81,7 +82,7 @@ function  SaveConfig($hConfig,$sPath=false)
 {
     $sJson = str_replace('","',"\",\n\"",json_encode($hConfig));
 	//x("saving config to ".CONFIG_PATH.": $sJson");
-	if (Save($sPath ? $sPath : CONFIG_PATH,"<?php/*\n$sJson\n*/?>"))
+	if (Save($sPath ? "$sPath.php" : CONFIG_PATH,"<?php/*\n$sJson\n*/?>"))
 		return true;
 	return false;
 	

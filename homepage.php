@@ -1,6 +1,7 @@
 <center>this is homepage.php set in MinIDE/config.php :-) 
 <h1>MinIDE, a minimal IDE based on CodeMirror</h1>
 </center>
+<h2>ajax demo: <a href="https://www.robosoft.de/MinIDE/AjaxDemo.htm" rel="nofollow">https://www.robosoft.de/MinIDE/AjaxDemo.htm</a></h2>
 <h2>demo: <a href="https://www.robosoft.de/MinIDE/test.htm" rel="nofollow">https://www.robosoft.de/MinIDE/test.htm</a></h2>
 
 <ul>

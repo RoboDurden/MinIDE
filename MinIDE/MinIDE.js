@@ -1,4 +1,9 @@
 
+function GetCallback(rCallback,rCallbackObject,sServerscript)
+{
+    return {"rCallback": rCallback, "rCallbackObject": rCallbackObject, "sServerscript": sServerscript};
+}
+
 
 function File(sPath,sValue,bOrg,bEditable)
 {
@@ -79,13 +84,19 @@ function CallIDE(iID,iAction,s)
     g_aoMindIDE[iID].CallIDE(iAction,s);
 }
 
-function MinIDE(sContainerId,bNoTree,sPathConfig)
+function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
 {
     this.m_iId = g_aoMindIDE.length;
     g_aoMindIDE.push(this);
 
     this.m_sContainerId = sContainerId;
     this.m_sPathConfig = sPathConfig;
+
+    // used by AjaxSend() for external usage of ajax engine
+    if (oAjaxExtern)    
+        oAjaxExtern.bExtern = true;
+    this.m_oAjaxExtern = oAjaxExtern;
+
     this.m_iWidth = 100;
     this.m_iHeight = 100;
 
@@ -112,6 +123,7 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
 
     this.m_sRootOrg = "";
 
+    this.m_sHello = "";
     this.m_sHelp = `
 <table style="font-size:12pt;">
     <tr><td>Ctrl-S</td><td style="text-align:left;">save file</td></tr>
@@ -125,8 +137,7 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
     <tr><td>Alt-G</td><td style="text-align:left;">Jump to line</td></tr>
 </table>
 `;
-
-
+    
     this._Init = function()
     {with(this){
       
@@ -177,11 +188,35 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
         SubmitAjax(1,JSON.stringify({"iId":m_iId, "sPathConfig":m_sPathConfig}));
     }}
 
-    this.LoadTree = function(sPathConfig)
+
+    this.LoadTree = function(sPathConfig,oCallbackReturn)
     {with(this){
-        m_sPathConfig = sPathConfig;
-        SubmitAjax(1,JSON.stringify({"iId":m_iId}));
-        //SubmitAjax(1,JSON.stringify({"iId":m_iId, "sPathConfig":sPathConfig}));
+        if (sPathConfig.bSuccess)    // the final callback :-)
+        {
+            sPathConfig.oParam = sPathConfig.sPathConfig;
+            _DoCallback(sPathConfig);
+            return;
+        }
+
+        let sPathConfigNew = sPathConfig.sPathConfig ? sPathConfig.sPathConfig : sPathConfig;
+
+        let oCallback = {"rCallback":LoadTree, "rCallbackObject":this,"oParam": oCallbackReturn ? oCallbackReturn : {}  };
+        if (oCallbackReturn)
+            oCallback.oParam = oCallbackReturn;
+        else if (sPathConfig.rCallback)
+            oCallback.oParam = sPathConfig;
+        else
+            oCallback.oParam = {};
+
+        oCallback.oParam.sPathConfig = sPathConfigNew;
+
+        if (!CloseAllEditable(oCallback)   )
+            return; // user cancled to save some changes or server save will call back
+
+        // now load new tree :-)
+        m_sPathConfig = sPathConfigNew;
+        oCallback.oParam.bSuccess = true;
+        SubmitAjax(1,JSON.stringify({"iId":m_iId}), oCallback);
     }}
 
     this.CloseTree = function()   // will not save changes! call SaveAll yourself in advance
@@ -207,7 +242,7 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
             return _Init();
 
         let sLoad = _aLoad.shift();
-        loadJS(sLoad,this,"_Load");
+        LoadResource(sLoad, {"rCallback":_Load, "rCallbackObject":this, "sLoaded":sLoad} );
     }}
 
     this._Load();
@@ -221,8 +256,8 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
         m_iHeight = parseInt(rContainer.style.height);
 
         var s = '<style>.CodeMirror { height: auto; max-height:'+Math.round(0.95*m_iHeight)+'vh;width:'+Math.round(0.83*m_iWidth)+'vw; border: 1px solid #ddd; }.CodeMirror-scroll { max-height:'+m_iHeight+'vh; }.CodeMirror pre { padding-left: 7px; line-height: 1.25; }</style>';
-        s+= '<div id="ServerMess" class="MinIDEServerMess" style="display:none;" onClick="this.style.display=\'none\'">server mess</div>'
-        + '<table class="MinIDE" style="width:100%;height:100%;" border=0><tr><td class="MinIDE_TopLeft" style="height:'+Math.round(0.05*m_iHeight)+'vh" id="MinIDE_TopLeft'+m_iId+'"></td><td id="MinIDE_TopRight'+m_iId+'"></td></tr>'
+        s+= '<div id="ServerMess" class="MinIDEServerMess" style="display:none;" onClick="this.innerHTML=\'\';this.style.display=\'none\'"></div>'
+        + '<table class="MinIDE" style="width:100%;height:100%;" border=0><tr><td class="MinIDE_TopLeft" style="text-align:center;height:'+Math.round(0.05*m_iHeight)+'vh" id="MinIDE_TopLeft'+m_iId+'"></td><td id="MinIDE_TopRight'+m_iId+'"></td></tr>'
         + '<tr><td class="MinIDE_BottomLeft" style="height:'+Math.round(0.95*m_iHeight)+'vh" id="MinIDE_BottomLeft'+m_iId+'"></td><td class="MinIDE_BottomRight"style="vertical-align:top;" id="MinIDE_BottomRight'+m_iId+'">'
         + '<div class="MinIDE_DivEditor" style="position:relative;height:100%;display:none;" id="MinIDE_DivEditor'+m_iId+'"><textarea class="MinIDE_Editor" style="height:100%" id="MinIDE_Editor'+m_iId+'"></textarea></div></td></tr></table>';
         //alert(s);
@@ -259,6 +294,10 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
     this._SetMenu = function()
     {with(this){
 
+        let r = document.getElementById("MinIDE_TopLeft"+m_iId);
+        if (!r)
+            return; // not yet written to dom
+
         var s = "";
 
         bChanges = false;
@@ -267,25 +306,26 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
             if (oFile.m_bChanged)   bChanges = true;
         });
     
-        if (bChanges)
-            s += '<input type="button" class="MinIdeMenu" onClick="CallIDE('+m_iId+',5);" value="Save All" />';
+        this.SetButton("Save All",bChanges ? 'CallIDE('+m_iId+',5);' : false,true);
 
         for (var sButton in m_hButton)
-            s += " " + m_hButton[sButton];
+            s += " " + '<input class="MinIdeMenu" onClick="'+m_hButton[sButton]+'" type="button" value="'+sButton+'"\/>'
+            
+            ;
 
-        let r = document.getElementById("MinIDE_TopLeft"+m_iId);
         r.innerHTML = s;
 
     }}
 
-    this.SetButton = function(sName,sHtml)
+    this.SetButton = function(sName,sOnClick,bNoSetMenu)
     {with(this){
-        if (sHtml)
-            m_hButton[sName] = sHtml;
+        if (sOnClick)
+            m_hButton[sName] = sOnClick;
         else 
             delete m_hButton[sName];
 
-        _SetMenu();
+        if (!bNoSetMenu)
+            _SetMenu();
     }}
 
 
@@ -306,6 +346,64 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
         //alert(r.parentNode.parentNode.offsetHeight);
         //var oS = document.getElementsByClassName('CodeMirror')[0];
     }}
+
+    this.CloseFile = function(oCallback)
+    {with(this){
+        let sPath = oCallback.sPath ? oCallback.sPath : oCallback;
+
+        if (!m_hFile[sPath])
+            return true;
+        let oFile = m_hFile[sPath];
+        if (oFile.m_bChanged)
+        {
+            if (oCallback.sPath)
+            {
+                if (confirm("save changes to server ?"))
+                {
+                    SaveFile(sPath,oCallback);
+                    return false;
+                }                
+            }
+            else if (!confirm("skip changes ?"))
+                return false;
+        }
+
+        let bOpen = m_oFile == oFile;
+        if (oFile.m_bEditable)
+            delete m_hFile[sPath];
+        
+        if (bOpen)
+        {
+            let sPrev = false;
+            while (m_aTabStack.length > 0)
+            {
+                sPrev = m_aTabStack.pop();
+                if (m_hFile[sPrev])
+                    break;
+            }
+            _OpenFile(m_hFile[sPrev]);
+        }
+        else 
+            _SetTabs();
+
+        _SetMenu();
+        if (!oFile.m_bOrg && !oCallback.sPath)  
+            if (confirm("also delete your server saved changes ?"))
+            {
+                SubmitAjax(7,sPath,oCallback);
+                return false;
+            }
+        return true;
+    }}
+
+
+    this.SaveFile = function(sPath,oCallback)
+    {with(this){
+        if (sPath == this.m_oFile.m_sPath)
+            m_oFile.UpdateData(m_oEditor);
+        SubmitAjax(4,JSON.stringify([m_hFile[sPath]]),oCallback);
+    }}
+
 
     this.SaveOpenFile = function()
     {with(this){
@@ -422,16 +520,19 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
         _SetTabs();
     }}
 
-    this.CloseEditable = function()
+    this.CloseAllEditable = function(oCallback)
     {with(this){
-        let bNoOpen = true;
+        //let bNoOpen = true;
         for (var sPath in m_hFile)
             if (m_hFile[sPath].m_bEditable)
             {
-                bNoOpen = false;
-                CallIDE(3,sPath);
+                //bNoOpen = false;
+                oCallback.sPath = sPath;
+                if (!CloseFile(oCallback))
+                    return false;
             }
-        return bNoOpen;
+        //return bNoOpen;
+        return true;
     }}
 
     this.CallIDE = function(iAction,s)
@@ -439,7 +540,7 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
 
         switch(iAction)
         {
-        case 2:
+        case 2: // open file s
             if (m_hFile[s])
             {
                 if (m_oFile == m_hFile[s])
@@ -450,48 +551,19 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
             }
             SubmitAjax(2,s);
             return;
-        case 3:
-            if (m_hFile[s])
-            {
-                let oFile = m_hFile[s];
-                if (oFile.m_bChanged)
-                    if (!confirm("skip changes ?"))
-                        return;
-    
-
-                let bOpen = m_oFile == oFile;
-                if (oFile.m_bEditable)
-                    delete m_hFile[s];
-                
-                    if (bOpen)
-                {
-                    let sPrev = false;
-                    while (m_aTabStack.length > 0)
-                    {
-                        sPrev = m_aTabStack.pop();
-                        if (m_hFile[sPrev])
-                            break;
-                    }
-                    _OpenFile(m_hFile[sPrev]);
-                }
-                else 
-                    _SetTabs();
-
-                _SetMenu();
-
-                if (!oFile.m_bOrg)  if (confirm("also delete your server saved changes ?"))
-                {
-                    SubmitAjax(7,s);
-                }
-            }
+        case 3: // close file s
+            CloseFile(s);
             return;
         case 5: // save all
             SaveAll();
             return;
+        case 8: // help button
+            Mess(m_sHelp,m_sHelp.length > 100 ? 30 : 5);
+            return;
         }
     }}
     
-    this.SaveAll = function(rCallback,rCallbackObject)
+    this.SaveAll = function(oCallback)
     {with(this){
         m_oFile.UpdateData(this.m_oEditor);
 
@@ -504,24 +576,29 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
         if (!aSave.length)
             return true;
 
-        SubmitAjax(4,JSON.stringify(aSave),false,false,rCallback,rCallbackObject);
+        SubmitAjax(4,JSON.stringify(aSave),oCallback);
         return false;
     }}
 
     this.Mess = function(s,iSeconds)
     {with(this){
         var rDiv = document.getElementById("ServerMess");
+        if (rDiv.innerHTML)
+            s = rDiv.innerHTML + "<hr/>" + s;
         rDiv.innerHTML = s + " <span id='TimerMess'></span>";
         rDiv.style.display = "";
-    
+
         if (m_hInterval)
             window.clearInterval(m_hInterval);
+        
         m_hInterval = window.setInterval(function () 
         {
             var r = document.getElementById("TimerMess");
-            r.innerHTML = iSeconds--;
+            if (r)
+                r.innerHTML = iSeconds--;
             if (iSeconds<0)
             {
+                rDiv.innerHTML = "";
                 rDiv.style.display = "none";
                 window.clearInterval(m_hInterval);
                 m_hInterval = null;
@@ -543,9 +620,10 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
             m_sMess += sMess;
     }}
 
-    this._InitTree = function(oData)
+    this._InitTree = function(oCallback)
     {with(this){
-        if (oData.sTree)  // first call
+        let oRet = oCallback._oRet;
+        if (oRet && oRet.sTree)  // first call
         {
             let hType = {
                 "php"   :["htmlmixed","xml","javascript","css","clike","php"]
@@ -557,39 +635,45 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
                 , "c"  :["clike"]
                 , "h"  :["clike"]
             };
-            oData.aLoad = [];
+            oRet.aLoad = [];
 
             var re = /([^.]+)'\);/g;
             var m;
             do {
-                m = re.exec(sTree);
+                m = re.exec(oRet.sTree);
                 if (m)  
                     for (var i in hType[m[1]])  
-                        if (!oData.aLoad.includes(hType[m[1]][i]))
-                            oData.aLoad.push(hType[m[1]][i]);
+                        if (!oRet.aLoad.includes(hType[m[1]][i]))
+                        oRet.aLoad.push(hType[m[1]][i]);
                         //hLoad[hType[m[1]][i]] = 1;
             } while (m);
-            oData.sTree = false;
+            oRet.sTree = false;
         }
 
-        if (oData.aLoad.length)
+        if (oRet.aLoad.length)
         {
-            let sLoad = oData.aLoad.pop();
-            loadJS("CodeMirror/mode/"+sLoad+"/"+sLoad+".js",this,"_InitTree",oData);
+            let sLoad = oRet.aLoad.pop();
+            LoadResource("CodeMirror/mode/"+sLoad+"/"+sLoad+".js", {"rCallback":_InitTree, "rCallbackObject":this, "oParam":oCallback} );
         }
         else
         {
-            if (oData.aOpen)
+            if (oRet.aOpen)
             {
-                for(i in oData.aOpen)
-                    SubmitAjax(2,oData.aOpen[i]);
+                for(var i=oRet.aOpen.length; i>=0; i--)
+                    SubmitAjax(2,oRet.aOpen[i]);
             }
+            _DoCallback(oCallback);
         }
+    }}
 
+    this.AjaxSend = function(iAction,oJson)
+    {with(this){
+        let sJsonSend = JSON.stringify(oJson);
+        SubmitAjax(iAction,sJsonSend,m_oAjaxExtern);
     }}
 
 
-    this.SubmitAjax = function(iAction,sJson,sUrl,bNoJson,rCallback,rCallbackObject)
+    this.SubmitAjax = function(iAction,sJson,oCallback)
     {with(this){
         var oData = new FormData(); // m_rForm
         //oData.append(rSID.name,rSID.value);
@@ -602,9 +686,17 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
         // Create our XMLHttpRequest object
         var hr = new XMLHttpRequest();
         // Create some variables we need to send to our PHP file
-        let bExternalCall = sUrl;
-        if (!sUrl) 
-            sUrl = GetScriptBase() + "MinIDE.php";
+
+//      let bExternalCall = false;
+        let sUrl = GetScriptBase() + "MinIDE.php";
+        if (oCallback)
+        {
+            if (oCallback.sServerscript)
+            {
+                sUrl = oCallback.sServerscript;
+//                bExternalCall = true;
+            }
+        }
 
         hr.open("POST", sUrl, true);
         // Set content type header information for sending url encoded variables in the request
@@ -633,7 +725,8 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
 
                 var sRet = hr.responseText;
                 let oRet = null;
-                if (!bNoJson)
+                if (sRet.match(/^\{.*\}$/))
+                //if (!bNoJson)
                 {
                     try 
                     {
@@ -651,10 +744,12 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
                     }
                 }
  
-                if (bExternalCall && rCallback)
+                if (oCallback && oCallback.bExtern)
                 {
-                        rCallback(iAction,oRet,rCallbackObject);
-                }
+                    oRet.iAction = iAction;
+                    oCallback.oParam = oRet;
+                    _DoCallback(oCallback);
+3                }
                 else 
                 {
                     switch(iAction)
@@ -669,12 +764,20 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
                             r.innerHTML = sTree;
                             init_php_file_tree();
 
-                            _InitTree(oRet);
-                            oRet.sMess = oRet.sMess ? oRet.sMess + m_sHelp : m_sHelp;
+                            if (!oCallback)
+                                oCallback = {};
+
+                            oCallback._oRet = oRet;
+                            _InitTree(oCallback);
+                            oCallback = null;
+                            oRet.sMess = oRet.sMess ? oRet.sMess + m_sHello : m_sHello;
+                            m_sHello = "";
+
+                            SetButton("?",'CallIDE('+m_iId+',8)');
                         }
 
                         if (oRet.sHomeUrl)
-                        SubmitAjax(6,"",oRet.sHomeUrl,true);
+                            SubmitAjax(6,"",{"sServerscript": oRet.sHomeUrl}    );
 
                         break;
                     case 2:
@@ -698,7 +801,10 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
                                 aNot.push(sNot);
                             });
                         if (aNot.length)
+                        {
                             ServerMess("can not save files of type" + (aNot.length>1 ? "s":"") +" : " + aNot.join(" , "));
+                            oCallback = null;   // abort 
+                        }
                     
                         _SetTabs();
                         _SetMenu();
@@ -723,11 +829,7 @@ function MinIDE(sContainerId,bNoTree,sPathConfig)
                     default:
                         ServerMess("unkown action: "+ iAction);
                     }
-                    if (rCallback)
-                    {
-                        rCallback(iAction,oRet,rCallbackObject);
-                    }
-    
+                    _DoCallback(oCallback);
                 }
                 if (oRet) if (oRet.sMess)
                     ServerMess(oRet.sMess);
@@ -760,8 +862,18 @@ function GetScriptBase()
     return false;
 }
 
+function _DoCallback(oCallback)
+{
+    if (oCallback)
+        if (oCallback.rCallback)
+            if (oCallback.rCallbackObject)
+                oCallback.rCallback.call(oCallback.rCallbackObject,oCallback.oParam);
+            else
+                oCallback.rCallback(oCallback.oParam);
+}
 
-var loadJS = function(url, rObject,rCallback,oData){
+
+LoadResource = function(url, oCallback){
     var aM = url.match(/\.([^.]+)$/);
     let sExt = aM[1].toLowerCase();
 
@@ -787,20 +899,15 @@ var loadJS = function(url, rObject,rCallback,oData){
         break;
     }
 
-
-
-    scriptTag.rObject = rObject;
-    scriptTag.rCallback = rCallback;
+    scriptTag.oCallback = oCallback;
 
     scriptTag.onerror = function(){alert(url + " not found -> aboarting MinIDE :-(")};
-    if (rCallback)
+    if (oCallback)
     {
-        scriptTag.onload = function(){
-            if (rObject)
-                this.rObject[rCallback](oData);
-            else if (rCallback)
-                rCallback(oData);
-        };
+        scriptTag.onload = function()
+        {
+            _DoCallback(oCallback);
+        }
     }
 
     document.body.appendChild(scriptTag);

@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head>
+    <title>how to add MinIDE to your project:-)</title>
+    <meta charset="utf-8"/>
+ </head>
+<body style="padding:0;margin:0;">
+
+    <div id="IDE" style="width:98vw;height:98vh;"></div>
+    <script src="MinIDE/MinIDE.js"></script>
+<script>
+
+function Project(sIdIDE)
+{
+    this.m_oIDE = null;         // gets initialized at the end of class
+
+    this.LoadTree = function(sConfigSet)
+    {with(this){
+        m_oIDE.LoadTree(sConfigSet, GetCallback(LoadTreeSuccess,this)   );
+    }}  
+
+    this.LoadTreeSuccess = function(sPathTree)
+    {with(this){
+        m_oIDE.Mess("tree of " + sPathTree + " loaded :-)",3);
+    }}
+
+    this.ClickMe = function()
+    {with(this){
+        m_oIDE.AjaxSend(1,{"iSend":41});
+    }}
+
+    this.ServerResponse = function(oRet)
+    {with(this){
+        switch(oRet.iAction)
+        {
+        case 1:
+            oRet.sMess = "AjaxDemo.php answered with " + oRet.iAnswer + " :-) ";
+	        break;
+        }
+    }}
+
+    with (this)
+    {
+        m_oIDE = new MinIDE(sIdIDE,"../AjaxConfig", GetCallback(ServerResponse,this,"AjaxDemo.php") );
+        m_oIDE.SetButton("Call Server","oProject.ClickMe()");
+    }
+}
+
+var oProject = new Project("IDE");
+</script>
+
+    </body>
+</html>

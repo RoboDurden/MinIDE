@@ -1,0 +1,11 @@
+<?php/*
+{"pPassword":"",
+"pPasswordNew1":"",
+"pPasswordNew2":"",
+"sBlacklist":"",
+"sFiles":"[]",
+"sHomepage":"",
+"sRootOrg":"CodeMirror",
+"sWhitelist":"",
+"sWhitelistSave":"log,txt"}
+*/?>
