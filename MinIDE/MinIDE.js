@@ -1,9 +1,23 @@
 
-function GetCallback(rCallback,rCallbackObject,sServerscript)
+function Callback(rCallback,rCallbackObject,oRet,sServerscript)
 {
-    return {"rCallback": rCallback, "rCallbackObject": rCallbackObject, "sServerscript": sServerscript};
-}
+    this.rCallback      = rCallback;            // the callback function
+    this.rCallbackObject = rCallbackObject;     // if it is an element function (method) of some class
+    this.oParam = oRet ? oRet : {};             // an object to be returned
+    this.sServerscript  = sServerscript;        // the servercript that might be called
 
+    this.Go = function(oRet)
+    {with(this){
+        if (oRet)
+            oParam = oRet;
+
+        if (rCallback)
+            if (rCallbackObject)
+                rCallback.call(rCallbackObject,oParam);
+            else
+                rCallback(oParam);
+    }}
+}
 
 function File(sPath,sValue,bOrg,bEditable)
 {
@@ -188,25 +202,36 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
         SubmitAjax(1,JSON.stringify({"iId":m_iId, "sPathConfig":m_sPathConfig}));
     }}
 
-
     this.LoadTree = function(sPathConfig,oCallbackReturn)
     {with(this){
-        if (sPathConfig.bSuccess)    // the final callback :-)
-        {
-            sPathConfig.oParam = sPathConfig.sPathConfig;
-            _DoCallback(sPathConfig);
-            return;
-        }
+        oCallbackReturn.sPathConfig = sPathConfig;
+        _LoadTree(oCallbackReturn);
+    }}
 
+    this._LoadTree = function(oCallback)
+    {with(this){
+        let oCallbackNew = new Callback(_LoadTree,this,oCallback);  // oCallback will be called when oCallbackNew succeeded
+        if (!CloseAllEditable(oCallbackNew)   )
+            return; // user cancled to save some changes or server.save will call back _LoadTree when save succeeded
+
+        // now load new tree :-)
+        m_sPathConfig = oCallback.sPathConfig;
+        SubmitAjax(1,JSON.stringify({"iId":m_iId}), oCallbackNew);
+    }}
+
+    this.LoadTreeOld = function(sPathConfig,oCallbackReturn)
+    {with(this){
         let sPathConfigNew = sPathConfig.sPathConfig ? sPathConfig.sPathConfig : sPathConfig;
 
-        let oCallback = {"rCallback":LoadTree, "rCallbackObject":this,"oParam": oCallbackReturn ? oCallbackReturn : {}  };
-        if (oCallbackReturn)
+        //let oCallback = {"rCallback":LoadTree, "rCallbackObject":this,"oParam": oCallbackReturn ? oCallbackReturn : {}  };
+        let oCallback = new Callback(LoadTree,this);
+        if (oCallbackReturn)    // first time called and wants to be called back
+        {
+            oCallbackReturn.oParam = sPathConfig;
             oCallback.oParam = oCallbackReturn;
-        else if (sPathConfig.rCallback)
-            oCallback.oParam = sPathConfig;
-        else
-            oCallback.oParam = {};
+        }
+        else if (sPathConfig.rCallback) // later by callback
+            oCallback.oParam = sPathConfig;     // sPathConfig is the callback to be finally called
 
         oCallback.oParam.sPathConfig = sPathConfigNew;
 
@@ -215,7 +240,6 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
 
         // now load new tree :-)
         m_sPathConfig = sPathConfigNew;
-        oCallback.oParam.bSuccess = true;
         SubmitAjax(1,JSON.stringify({"iId":m_iId}), oCallback);
     }}
 
@@ -242,7 +266,8 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
             return _Init();
 
         let sLoad = _aLoad.shift();
-        LoadResource(sLoad, {"rCallback":_Load, "rCallbackObject":this, "sLoaded":sLoad} );
+        LoadResource(sLoad, new Callback(_Load,this) );
+        //LoadResource(sLoad, {"rCallback":_Load, "rCallbackObject":this, "sLoaded":sLoad} );
     }}
 
     this._Load();
@@ -622,7 +647,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
 
     this._InitTree = function(oCallback)
     {with(this){
-        let oRet = oCallback._oRet;
+        let oRet = oCallback.oRet;
         if (oRet && oRet.sTree)  // first call
         {
             let hType = {
@@ -653,7 +678,8 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
         if (oRet.aLoad.length)
         {
             let sLoad = oRet.aLoad.pop();
-            LoadResource("CodeMirror/mode/"+sLoad+"/"+sLoad+".js", {"rCallback":_InitTree, "rCallbackObject":this, "oParam":oCallback} );
+            //LoadResource("CodeMirror/mode/"+sLoad+"/"+sLoad+".js", {"rCallback":_InitTree, "rCallbackObject":this, "oParam":oCallback} );
+            LoadResource("CodeMirror/mode/"+sLoad+"/"+sLoad+".js", new Callback(_InitTree,this,oCallback) );
         }
         else
         {
@@ -662,7 +688,16 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
                 for(var i=oRet.aOpen.length; i>=0; i--)
                     SubmitAjax(2,oRet.aOpen[i]);
             }
-            _DoCallback(oCallback);
+
+            oCallback = oCallback.oParam;
+            if (oRet.sHomeUrl)
+            {
+                oCallback.sServerscript = oRet.sHomeUrl;
+                SubmitAjax(6,"",oCallback );
+            }
+            else 
+                oCallback.Go();
+            //_DoCallback(oCallback);
         }
     }}
 
@@ -747,14 +782,21 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
                 if (oCallback && oCallback.bExtern)
                 {
                     oRet.iAction = iAction;
-                    oCallback.oParam = oRet;
-                    _DoCallback(oCallback);
+                    oCallback.Go(oRet);
+                    //oCallback.oParam = oRet;
+                    //_DoCallback(oCallback);
 3                }
                 else 
                 {
                     switch(iAction)
                     {
                     case 1:
+
+                        if (!oCallback)
+                            oCallback = new Callback();
+//                                oCallback = {};
+                        oCallback.oRet = oRet;
+
                         if (oRet.sTree)
                         {
                             m_sRootOrg = oRet.sRootOrg;
@@ -764,21 +806,19 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
                             r.innerHTML = sTree;
                             init_php_file_tree();
 
-                            if (!oCallback)
-                                oCallback = {};
-
-                            oCallback._oRet = oRet;
                             _InitTree(oCallback);
-                            oCallback = null;
                             oRet.sMess = oRet.sMess ? oRet.sMess + m_sHello : m_sHello;
                             m_sHello = "";
 
                             SetButton("?",'CallIDE('+m_iId+',8)');
+                            oCallback = null;
                         }
-
-                        if (oRet.sHomeUrl)
-                            SubmitAjax(6,"",{"sServerscript": oRet.sHomeUrl}    );
-
+                        else    if (oRet.sHomeUrl)
+                        {
+                            oCallback.sServerscript = oRet.sHomeUrl;
+                            SubmitAjax(6,"",oCallback );
+                            oCallback = null;
+                        }
                         break;
                     case 2:
                         let oFile = new File(sJson,oRet.sFile,oRet.bOrg,true);
@@ -829,7 +869,9 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
                     default:
                         ServerMess("unkown action: "+ iAction);
                     }
-                    _DoCallback(oCallback);
+                    if (oCallback && oCallback.Go)
+                       oCallback.Go();
+                    //_DoCallback(oCallback);
                 }
                 if (oRet) if (oRet.sMess)
                     ServerMess(oRet.sMess);
@@ -860,16 +902,6 @@ function GetScriptBase()
                 return aScript[i].src.substring(0,iPos);
 
     return false;
-}
-
-function _DoCallback(oCallback)
-{
-    if (oCallback)
-        if (oCallback.rCallback)
-            if (oCallback.rCallbackObject)
-                oCallback.rCallback.call(oCallback.rCallbackObject,oCallback.oParam);
-            else
-                oCallback.rCallback(oCallback.oParam);
 }
 
 
@@ -906,7 +938,8 @@ LoadResource = function(url, oCallback){
     {
         scriptTag.onload = function()
         {
-            _DoCallback(oCallback);
+//            _DoCallback(oCallback);
+            oCallback.Go();
         }
     }
 

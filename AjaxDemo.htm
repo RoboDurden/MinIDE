@@ -3,11 +3,11 @@
 <head>
     <title>how to add MinIDE to your project:-)</title>
     <meta charset="utf-8"/>
+    <script src="MinIDE/MinIDE.js"></script>
  </head>
 <body style="padding:0;margin:0;">
 
     <div id="IDE" style="width:98vw;height:98vh;"></div>
-    <script src="MinIDE/MinIDE.js"></script>
 <script>
 
 function Project(sIdIDE)
@@ -16,12 +16,12 @@ function Project(sIdIDE)
 
     this.LoadTree = function(sConfigSet)
     {with(this){
-        m_oIDE.LoadTree(sConfigSet, GetCallback(LoadTreeSuccess,this)   );
+        m_oIDE.LoadTree(sConfigSet, new Callback(LoadTreeSuccess,this,sConfigSet)   );
     }}  
 
-    this.LoadTreeSuccess = function(sPathTree)
+    this.LoadTreeSuccess = function(sConfigSet)
     {with(this){
-        m_oIDE.Mess("tree of " + sPathTree + " loaded :-)",3);
+        m_oIDE.Mess("tree of " + sConfigSet + " loaded :-)",3);
     }}
 
     this.ClickMe = function()
@@ -41,7 +41,7 @@ function Project(sIdIDE)
 
     with (this)
     {
-        m_oIDE = new MinIDE(sIdIDE,"../AjaxConfig", GetCallback(ServerResponse,this,"AjaxDemo.php") );
+        m_oIDE = new MinIDE(sIdIDE,"../AjaxConfig", new Callback(ServerResponse,this,null,"AjaxDemo.php") );
         m_oIDE.SetButton("Call Server","oProject.ClickMe()");
     }
 }

@@ -3,7 +3,7 @@
 "pPasswordNew1":"",
 "pPasswordNew2":"",
 "sBlacklist":"",
-"sFiles":"{\"\\\/MinIDE\\\/config.log\":[0,2,0],\"\\\/AjaxDemo.log\":[0,1,0]}",
+"sFiles":"{\"\\\/MinIDE\\\/config.log\":[0,2,0],\"\\\/AjaxDemo.log\":[9,1,0]}",
 "sHomepage":"AjaxHome.htm",
 "sRootOrg":"..",
 "sWhitelist":"",
