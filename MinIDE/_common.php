@@ -32,10 +32,10 @@ x("hello world :) " . Timestamp(),1);
 x('online : '.C_bOnline);
 
 
-foreach($_GET AS $sKey => $sValue)	x("_GET: $sKey => $sValue");
-foreach($_POST AS $sKey => $sValue)	x("_POST: $sKey => $sValue");
+//foreach($_GET AS $sKey => $sValue)	x("_GET: $sKey => $sValue");
+//foreach($_POST AS $sKey => $sValue)	x("_POST: $sKey => $sValue");
 //foreach($_COOKIE AS $sKey => $sValue)	x("__COOKIE: $sKey => $sValue");
-foreach($_REQUEST AS $sKey => $sValue)	x("_REQUEST: $sKey => $sValue");
+//foreach($_REQUEST AS $sKey => $sValue)	x("_REQUEST: $sKey => $sValue");
 foreach($_FILES AS $sKey => $aF)
 {
 	x("_FILES: $sKey => $aF");
@@ -82,8 +82,9 @@ function  SaveConfig($hConfig,$sPath=false)
 {
     $sJson = str_replace('","',"\",\n\"",json_encode($hConfig));
 	//x("saving config to ".CONFIG_PATH.": $sJson");
-	if (Save($sPath ? "$sPath.php" : CONFIG_PATH,"<?php/*\n$sJson\n*/?>"))
-		return true;
+	$sPath = $sPath ? "$sPath.php" : CONFIG_PATH;
+	if (Save($sPath,"<?php/*\n$sJson\n*/?>"))
+		return $sPath;
 	return false;
 	
 }

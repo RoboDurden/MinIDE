@@ -695,7 +695,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
                 oCallback.sServerscript = oRet.sHomeUrl;
                 SubmitAjax(6,"",oCallback );
             }
-            else 
+            else if (oCallback.Go) 
                 oCallback.Go();
             //_DoCallback(oCallback);
         }

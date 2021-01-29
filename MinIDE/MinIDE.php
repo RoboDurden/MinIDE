@@ -17,7 +17,7 @@ if (!isset($_POST['action']))
 $g_sConfigPath = isset($_POST['config']) ? $_POST['config'] : false;
 $oConfig = LoadConfig($g_sConfigPath);
 
-x("oConfig\n:".print_r($oConfig,true));
+//x("oConfig\n:".print_r($oConfig,true));
 
 $iAction = $_POST['action'];
 $sJson = $_POST['json'];
@@ -37,7 +37,7 @@ function Action($iAction,$sJson)
     x("oJson\n:".print_r($oJson,true));
 
     $hFile = $oConfig->sFiles ? (array) json_decode($oConfig->sFiles) : array();
-    x("hFileConfig\n:".print_r($hFile,true));
+    //x("hFile\n:".print_r($hFile,true));
 
     $oRet = (object) array();
 

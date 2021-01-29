@@ -30,24 +30,35 @@ div.Mess
     <center>
 <?php
 
-//define('C_bCacheLog',	0);
+define('C_bCacheLog',	0);
 define('C_bNoLog',	0);
 define('C_sLogFile',	'config.log');
 
 require('_common.php');
 
-
+define('DEMO_VERSION',strpos($_SERVER['HTTP_HOST'],'robosoft') !== FALSE);
 
 $sMess = "";
 
-//foreach($_POST AS $sKey => $sValue) 	Mess("_POST: $sKey => $sValue");
+usleep(500000);     // always wait 0,5s to prevent brute force attacks
 
+$hConfigLoad = (array)LoadConfig($_REQUEST['config']);
+
+x("check demo version");
+
+if (! DEMO_VERSION && !$hConfigLoad['pPassword'])
+{
+    $hConfigLoad['pPassword'] = randomPassword();
+    $sConfigPath = SaveConfig($hConfigLoad,$_REQUEST['config']);
+    Mess("random password set, read it in $sConfigPath via ftp !");
+}
+
+x("done");
 
 if (isset($_POST['save']))
 {
     $bSave = true;
     $hConfig = array();
-    $hConfigLoad = (array)LoadConfig($_REQUEST['config']);
 
     if ($_POST['pPassword'] != $hConfigLoad['pPassword'])
         $bSave = Mess("wrong pPassword");
@@ -87,7 +98,7 @@ if (isset($_POST['save']))
 
         ksort($hConfig);
 
-        if (strpos($_SERVER['HTTP_HOST'],'robosoft') !== FALSE)
+        if (DEMO_VERSION)
             Mess("demo version :-) config save not allowed.");
         else if (SaveConfig($hConfig,$_REQUEST['config']))
             Mess("config saved :-)");
@@ -138,6 +149,30 @@ if ($sMess)
 print $s;
 
 xx();
+
+function randomPassword() {
+    $alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+    $pass = array(); //remember to declare $pass as an array
+    $alphaLength = strlen($alphabet) - 1; //put the length -1 in cache
+    for ($i = 0; $i < 8; $i++) {
+        $n = rand(0, $alphaLength);
+        $pass[] = $alphabet[$n];
+    }
+    return implode($pass); //turn the array into a string
+}
+
+function generatePassword($length = 8) {
+    
+    $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    $count = mb_strlen($chars);
+
+    for ($i = 0, $result = ''; $i < $length; $i++) {
+        $index = rand(0, $count - 1);
+        $result .= mb_substr($chars, $index, 1);
+    }
+
+    return $result;
+}
 
 function Mess($s)
 {
