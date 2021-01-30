@@ -205,6 +205,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
 
     this.LoadTree = function(sPathConfig,oCallbackReturn)
     {with(this){
+        if (!oCallbackReturn)    oCallbackReturn = {};
         oCallbackReturn.sPathConfig = sPathConfig;
         _LoadTree(oCallbackReturn);
     }}
@@ -695,6 +696,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
             if (oRet.sHomeUrl)
             {
                 oCallback.sServerscript = oRet.sHomeUrl;
+                oCallback.bNoJson = true;
                 SubmitAjax(6,"",oCallback );
             }
             else if (oCallback.Go) 
@@ -761,9 +763,10 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
                 }
 
                 var sRet = hr.responseText;
-                let oRet = null;
-                if (sRet.match(/^\{.*\}$/))
+                let oRet = {};
+                //if (sRet.match(/^\{.*\}$/))
                 //if (!bNoJson)
+                if (!oCallback || !oCallback.bNoJson)
                 {
                     try 
                     {
@@ -818,6 +821,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
                         else    if (oRet.sHomeUrl)
                         {
                             oCallback.sServerscript = oRet.sHomeUrl;
+                            oCallback.bNoJson = true;
                             SubmitAjax(6,"",oCallback );
                             oCallback = null;
                         }
@@ -875,7 +879,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
                        oCallback.Go();
                     //_DoCallback(oCallback);
                 }
-                if (oRet) if (oRet.sMess)
+                if (oRet.sMess)
                     ServerMess(oRet.sMess);
             }
 
