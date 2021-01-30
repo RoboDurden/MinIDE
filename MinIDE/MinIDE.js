@@ -57,7 +57,8 @@ function File(sPath,sValue,bOrg,bEditable)
         if (aM)
         {
             let sExt = aM[1].toLowerCase();
-            var h = {"js":"text/javascript", "c":"text/x-csrc", "h":"text/x-csrc", "css":"text/css", "htm":"text/html", "html":"text/html", "php":"application/x-httpd-php"};
+            var h = {"js":"text/javascript", "c":"text/x-csrc", "h":"text/x-csrc", "css":"text/css", "htm":"text/html", "html":"text/html", "php":"application/x-httpd-php"
+                    ,"md":"text/x-markdown"};
             if (h[sExt])
                 return h[sExt];
         }
@@ -659,6 +660,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
                 , "cpp"  :["clike"]
                 , "c"  :["clike"]
                 , "h"  :["clike"]
+                , "md"  :["markdown"]
             };
             oRet.aLoad = [];
 
