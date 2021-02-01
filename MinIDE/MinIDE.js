@@ -17,14 +17,22 @@ function Callback(rCallback,rCallbackObject,oRet,sServerscript)
             else
                 rCallback(oParam);
     }}
+
+    this.Clone = function(sServerscript)
+    {
+        let oP = JSON.parse(JSON.stringify(this.oParam));
+        return new Callback(this.rCallback,this.rCallbackObject,oP,sServerscript ? sServerscript : this.sServerscript);
+    }
+
 }
 
-function File(sPath,sValue,bOrg,bEditable)
+function File(sPath,sValue,bOrg,bEditable,bNoClose)
 {
     this.m_sPath = sPath;
     this.m_sValue = sValue;
     this.m_bOrg = bOrg; // no modified file yet saved to config.sRootSave
     this.m_bEditable = bEditable;
+    this.m_bNoClose = bNoClose;
     this.m_oCursor = null;
     this.m_oScrollInfo = null;
 
@@ -85,7 +93,7 @@ function File(sPath,sValue,bOrg,bEditable)
             }
         }
         let sHtml = '<span class="'+sClass+'">'+sChanged+'<a class="'+sClass+'" href="javascript:CallIDE('+iId+',2,\''+m_sPath+'\');">'+sLabel+'</a>';
-        if (this.m_bEditable)
+        if (!this.m_bNoClose)
             sHtml += '&nbsp;<a class="'+sClass+'" style="color:#ff0000" href="javascript:CallIDE('+iId+',3,\''+m_sPath+'\');">x</a>';
         return sHtml + "</span> ";
         return '<input type="button" class="'+sClass+'" value="'+s+'" />';
@@ -156,7 +164,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
     this._Init = function()
     {with(this){
       
-        WriteHtml();
+        _WriteHtml();
 
         let rTextArea = document.getElementById("MinIDE_Editor"+m_iId);
 
@@ -200,7 +208,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
 
             }
         });
-        SubmitAjax(1,JSON.stringify({"iId":m_iId, "sPathConfig":m_sPathConfig}));
+        _SubmitAjax(1,JSON.stringify({"iId":m_iId, "sPathConfig":m_sPathConfig}));
     }}
 
     this.LoadTree = function(sPathConfig,oCallbackReturn)
@@ -218,7 +226,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
 
         // now load new tree :-)
         m_sPathConfig = oCallback.sPathConfig;
-        SubmitAjax(1,JSON.stringify({"iId":m_iId}), oCallbackNew);
+        _SubmitAjax(1,JSON.stringify({"iId":m_iId}), oCallbackNew);
     }}
 
     this.LoadTreeOld = function(sPathConfig,oCallbackReturn)
@@ -242,7 +250,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
 
         // now load new tree :-)
         m_sPathConfig = sPathConfigNew;
-        SubmitAjax(1,JSON.stringify({"iId":m_iId}), oCallback);
+        _SubmitAjax(1,JSON.stringify({"iId":m_iId}), oCallback);
     }}
 
     this.CloseTree = function()   // will not save changes! call SaveAll yourself in advance
@@ -275,7 +283,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
     this._Load();
 
 
-    this.WriteHtml = function()
+    this._WriteHtml = function()
     {with(this){
 
         let rContainer = document.getElementById(m_sContainerId);
@@ -285,7 +293,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
         var s = '<style>.CodeMirror { height: auto; max-height:'+Math.round(0.95*m_iHeight)+'vh;width:'+Math.round(0.83*m_iWidth)+'vw; border: 1px solid #ddd; }.CodeMirror-scroll { max-height:'+m_iHeight+'vh; }.CodeMirror pre { padding-left: 7px; line-height: 1.25; }</style>';
         s+= '<div id="ServerMess" class="MinIDEServerMess" style="display:none;" onClick="this.innerHTML=\'\';this.style.display=\'none\'"></div>'
         + '<table class="MinIDE" style="width:100%;height:100%;" border=0><tr><td class="MinIDE_TopLeft" style="text-align:center;height:'+Math.round(0.05*m_iHeight)+'vh" id="MinIDE_TopLeft'+m_iId+'"></td><td id="MinIDE_TopRight'+m_iId+'"></td></tr>'
-        + '<tr><td class="MinIDE_BottomLeft" style="height:'+Math.round(0.95*m_iHeight)+'vh" id="MinIDE_BottomLeft'+m_iId+'"></td><td class="MinIDE_BottomRight"style="vertical-align:top;" id="MinIDE_BottomRight'+m_iId+'">'
+        + '<tr><td class="MinIDE_BottomLeft" style="height:'+Math.round(0.95*m_iHeight)+'vh" id="MinIDE_BottomLeft'+m_iId+'"></td><td class="MinIDE_BottomRight"style="width:100%;vertical-align:top;" id="MinIDE_BottomRight'+m_iId+'">'
         + '<div class="MinIDE_DivEditor" style="position:relative;height:100%;display:none;" id="MinIDE_DivEditor'+m_iId+'"><textarea class="MinIDE_Editor" style="height:100%" id="MinIDE_Editor'+m_iId+'"></textarea></div></td></tr></table>';
         //alert(s);
 
@@ -296,7 +304,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
     {
         return this.m_oEditor.getValue()   
     }
-
+/*
     this._ShowHomepage = function(bShow,sHtml)
     {with(this){
 
@@ -317,6 +325,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
         }
 
     }}
+*/
 
     this._SetMenu = function()
     {with(this){
@@ -396,7 +405,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
         }
 
         let bOpen = m_oFile == oFile;
-        if (oFile.m_bEditable)
+        if (!oFile.m_bNoClose)
             delete m_hFile[sPath];
         
         if (bOpen)
@@ -417,7 +426,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
         if (!oFile.m_bOrg && !oCallback.sPath)  
             if (confirm("also delete your server saved changes ?"))
             {
-                SubmitAjax(7,sPath,oCallback);
+                _SubmitAjax(7,sPath,oCallback);
                 return false;
             }
         return true;
@@ -428,7 +437,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
     {with(this){
         if (sPath == this.m_oFile.m_sPath)
             m_oFile.UpdateData(m_oEditor);
-        SubmitAjax(4,JSON.stringify([m_hFile[sPath]]),oCallback);
+        _SubmitAjax(4,JSON.stringify([m_hFile[sPath]]),oCallback);
     }}
 
 
@@ -436,32 +445,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
     {with(this){
         m_oFile.UpdateData(m_oEditor);
         let sJson = JSON.stringify([m_oFile]);
-        SubmitAjax(4,sJson);
-
-    }}
-
-    this.Find = function(s)
-    {with(this){
-        if (!s)
-            s = prompt("search for:");
-        alert("find " + s);
-    }}
-    this.Goto = function(iLine)
-    {with(this){
-        if (iLine<0)
-            iLine = prompt("go to line:");
-        iLine = parseInt(iLine);
-        if (isNaN(iLine))
-            return;
-        //alert("now goto line " + iLine);
-
-        m_oEditor.setCursor(iLine,0);
-        var t = m_oEditor.charCoords({line: iLine, ch: 0}, "local").top; 
-        var middleHeight = m_oEditor.getScrollerElement().offsetHeight / 2; 
-        m_oEditor.scrollTo(null, t - middleHeight - 5); 
-
-        //m_oEditor.setCursor(iLine,0,{scroll:true});
-        //m_oEditor.scrollTo(oFile.m_oScrollInfo.left,oFile.m_oScrollInfo.top);
+        _SubmitAjax(4,sJson);
 
     }}
 
@@ -518,14 +502,18 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
                 {
                     let r = document.createElement("div");
                     r.style.height = "100%";
+                    r.style.width = "100%";
                     r.style.overflow = "scroll"
                     r.style.display = "none";
+                    r.style.outline = "0px solid transparent";      // to remove the border when focused
+                    r.tabIndex = "-1";      // to allow focus()
                     r.innerHTML = oFile.m_sValue;
 
                     rDivEditor.parentNode.insertBefore(r,rDivEditor);
                     oFile.m_rContainer = r;
                 }
                 oFile.m_rContainer.style.display = "";
+                oFile.m_rContainer.focus();
                 //rDivEditor.style.display = "none";
             }
             m_oFile = m_hFile[oFile.m_sPath] = oFile;
@@ -576,7 +564,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
                 _OpenFile(m_hFile[s]);
                 return;
             }
-            SubmitAjax(2,s);
+            _SubmitAjax(2,s);
             return;
         case 3: // close file s
             CloseFile(s);
@@ -603,7 +591,7 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
         if (!aSave.length)
             return true;
 
-        SubmitAjax(4,JSON.stringify(aSave),oCallback);
+        _SubmitAjax(4,JSON.stringify(aSave),oCallback);
         return false;
     }}
 
@@ -688,16 +676,18 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
         {
             if (oRet.aOpen)
             {
-                for(var i=oRet.aOpen.length; i>=0; i--)
-                    SubmitAjax(2,oRet.aOpen[i]);
+                for(var i=oRet.aOpen.length-1; i>=0; i--)
+                    _SubmitAjax(2,oRet.aOpen[i]);
             }
 
             oCallback = oCallback.oParam;
             if (oRet.sHomeUrl)
             {
-                oCallback.sServerscript = oRet.sHomeUrl;
-                oCallback.bNoJson = true;
-                SubmitAjax(6,"",oCallback );
+                //oCallback.sServerscript = oRet.sHomeUrl;
+                //oCallback.bNoJson = true;
+                oCallback.bNoClose = true;
+                //_SubmitAjax(6,"",oCallback );
+                LoadHtml(oRet.sHomeUrl,oCallback);                
             }
             else if (oCallback.Go) 
                 oCallback.Go();
@@ -705,14 +695,28 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
         }
     }}
 
+    this.LoadHtml = function(sUrl,oCallback,oJsonSend)
+    {with(this){
+        if (oCallback)
+            oCallback.sServerscript = sUrl;
+        else
+            oCallback = new Callback( null, null,{},sUrl)
+            //oCallback = m_oAjaxExtern.Clone(sUrl);
+
+        oCallback.bNoJson = true;
+        let sJsonSend = oJsonSend ? JSON.stringify(oJsonSend) : "";
+        _SubmitAjax(6,sJsonSend,oCallback );
+        return false;
+    }}
+
     this.AjaxSend = function(iAction,oJson)
     {with(this){
         let sJsonSend = JSON.stringify(oJson);
-        SubmitAjax(iAction,sJsonSend,m_oAjaxExtern);
+        _SubmitAjax(iAction,sJsonSend,m_oAjaxExtern);
     }}
 
 
-    this.SubmitAjax = function(iAction,sJson,oCallback)
+    this._SubmitAjax = function(iAction,sJson,oCallback)
     {with(this){
         var oData = new FormData(); // m_rForm
         //oData.append(rSID.name,rSID.value);
@@ -820,9 +824,11 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
                         }
                         else    if (oRet.sHomeUrl)
                         {
-                            oCallback.sServerscript = oRet.sHomeUrl;
-                            oCallback.bNoJson = true;
-                            SubmitAjax(6,"",oCallback );
+                            //oCallback.sServerscript = oRet.sHomeUrl;
+                            //oCallback.bNoJson = true;
+                            oCallback.bNoClose = true;
+                            LoadHtml(oRet.sHomeUrl,oCallback);
+                            //_SubmitAjax(6,"",oCallback );
                             oCallback = null;
                         }
                         break;
@@ -855,10 +861,10 @@ function MinIDE(sContainerId,sPathConfig,oAjaxExtern)
                         _SetTabs();
                         _SetMenu();
                         break;
-                    case 6: // home page
+                    case 6: // home page / LoadUrl
                     {
                         let sName = sUrl.split(".")[0];
-                        _OpenFile(new File(sName,sRet,true,false),true);
+                        _OpenFile(new File(sName,sRet,true,false,oCallback.bNoClose),true);
                         //_ShowHomepage(true,sRet);
                         break;
                     }
